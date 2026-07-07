@@ -1,0 +1,25 @@
+# RStudio
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+# macOS
+.DS_Store
+# renv: track renv.lock and renv/activate.R, but not the private library
+renv/library/
+renv/staging/
+renv/sandbox/
+# targets storage: generated cache, not source code
+_targets/
+_targets.tar.gz
+# Rendered report outputs
+report/*.html
+report/*_files/
+docs/*.html
+# Temporary files
+*.tmp
+*.log
+*.aux
+*.out
+*.toc
+*.synctex.gz
