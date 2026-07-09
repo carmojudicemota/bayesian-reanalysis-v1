@@ -1,0 +1,8 @@
+study_id,analysis_id,test_type,t_value,df,p_value,p_sidedness,n1,n2,n_eff,effect_estimate,se_estimate,source_quality,notes
+study_30,key,paired_t_test,1.21,36,0.23,one_sided,,,37,,,test_statistic,"Fully reproduced paired-samples t-test. Sign ignored for evidence strength because the Bayes factor uses squared evidence."
+study_33,key,one_sample_t_test,4.27,11,0.001,two_sided,,,12,1.23,,test_statistic,"Fully reproduced one-sample t-test against scale midpoint."
+study_33,second,one_sample_t_test,16.03,11,0.001,two_sided,,,12,4.63,,test_statistic,"Fully reproduced second one-sample t-test against scale midpoint."
+study_41,key,paired_t_test,8.53,29,0.001,two_sided,,,30,1.56,,test_statistic,"Fully reproduced paired-samples t-test. Reproduced df used because authors did not report df explicitly."
+study_41,second,paired_t_test,6.15,28,0.001,two_sided,,,29,1.14,,test_statistic,"Fully reproduced second paired-samples t-test. Reproduced df used."
+study_49,key,paired_t_test,1.20,27,0.119,one_sided,,,28,0.23,,test_statistic,"Fully reproduced paired-samples t-test."
+study_49,second,paired_t_test,0.47,27,0.319,one_sided,,,28,0.09,,test_statistic,"Fully reproduced second paired-samples t-test."
