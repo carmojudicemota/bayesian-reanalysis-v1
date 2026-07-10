@@ -1,263 +1,109 @@
 # R/reproduce/study_05.R
-# Study 5: Hard, Lovett, & Brady (2019)
-# DOI: 10.1037/stl0000136
-#
-# Purpose:
-# Recompute the two independent-samples t-tests used in the Bayesian
-# reanalysis index for study_5 directly from the raw CSV.
-#
-# Target rows:
-#   id = 3: senior-year 16-item quiz performance
-#   id = 4: number of additional psychology courses
-#
-# Group variable:
-#   Speciality == 1: psychology students, including majors/minors
-#   Speciality == 0: nonpsychology students
-#
-# Test:
-#   Student independent-samples t-test, two-sided, equal variances.
+# Study 5: Hard, Lovett, & Brady. DOI: 10.1037/stl0000136
+# Reconstructs rows id 3 and id 4 from the raw CSV.
+
+if (!exists("make_recomputed_row")) source("R/reproduce/00_reproduction_helpers.R")
+
+recompute_study_05_independent_t <- function(dat, id, analysis_label, outcome,
+                                             reported_result, reported_p_value,
+                                             reported_effect_size_value,
+                                             raw_data_file) {
+  check_required_columns(dat, c("Speciality", outcome), "study_05")
+
+  psychology <- dat[[outcome]][dat$Speciality == 1]
+  nonpsychology <- dat[[outcome]][dat$Speciality == 0]
+  psychology <- psychology[!is.na(psychology)]
+  nonpsychology <- nonpsychology[!is.na(nonpsychology)]
+
+  test_result <- stats::t.test(
+    x = psychology,
+    y = nonpsychology,
+    var.equal = TRUE,
+    alternative = "two.sided"
+  )
+
+  n1 <- length(psychology)
+  n2 <- length(nonpsychology)
+  mean1 <- mean(psychology)
+  mean2 <- mean(nonpsychology)
+  sd1 <- stats::sd(psychology)
+  sd2 <- stats::sd(nonpsychology)
+
+  pooled_sd <- sqrt(((n1 - 1) * sd1^2 + (n2 - 1) * sd2^2) / (n1 + n2 - 2))
+  mean_difference <- mean1 - mean2
+  se_difference <- pooled_sd * sqrt(1 / n1 + 1 / n2)
+  cohens_d <- mean_difference / pooled_sd
+  n_eff <- (n1 * n2) / (n1 + n2)
+
+  make_recomputed_row(
+    id = id,
+    study_id = "study_5",
+    study_DOI = "10.1037/stl0000136",
+    recomputation_status = "recomputed_from_raw_data",
+    stat_test = "independent_t_test",
+    reported_result = reported_result,
+    reported_p_value = reported_p_value,
+    reported_p_operator = "<",
+    reported_p_sidedness = "two_sided",
+    reported_effect_size_type = "cohens_d",
+    reported_effect_size_value = reported_effect_size_value,
+    p_value = as.numeric(test_result$p.value),
+    p_operator = "=",
+    p_sidedness = "two_sided",
+    t_value = as.numeric(test_result$statistic),
+    t_df = as.numeric(test_result$parameter),
+    n1 = n1,
+    n2 = n2,
+    n_total = n1 + n2,
+    n_eff = n_eff,
+    effect_size_type = "cohens_d",
+    effect_size_value = cohens_d,
+    estimate = mean_difference,
+    se_estimate = se_difference,
+    raw_data_file = raw_data_file,
+    raw_variable_names = paste("Speciality", outcome, sep = "; "),
+    model_formula = paste0(outcome, " ~ Speciality; Student independent-samples t-test, equal variances"),
+    contrast_direction = "psychology students minus nonpsychology students; Speciality 1 minus Speciality 0",
+    analysis_label = analysis_label,
+    statistic_source = "stats::t.test(var.equal = TRUE) on raw vectors",
+    bayesian_input_status = bayes_status_from_test("independent_t_test"),
+    extraction_note = paste0(
+      "Recovered group sizes, t, df, exact p, pooled-SD d, mean difference and SE. ",
+      "Psychology n = ", n1, "; nonpsychology n = ", n2,
+      "; psychology mean = ", round(mean1, 6), "; nonpsychology mean = ", round(mean2, 6),
+      "; psychology SD = ", round(sd1, 6), "; nonpsychology SD = ", round(sd2, 6), "."
+    )
+  )
+}
 
 reproduce_study_05 <- function(
     data_path = "data/raw/study_05/HardLovettBrady_Data_Shared.csv",
     output_path = "outputs/reproduced/study_05_recomputed.csv"
 ) {
-  
-  if (!file.exists(data_path)) {
-    stop(
-      "Missing raw CSV for study_05: ", data_path, "\n",
-      "Expected file name: HardLovettBrady_Data_Shared.csv"
-    )
-  }
-  
-  dat <- readr::read_csv(
-    file = data_path,
-    show_col_types = FALSE
-  )
-  
-  required_columns <- c(
-    "Speciality",
-    "16ItemQuizFollowupPerformance",
-    "NumPsychClass"
-  )
-  
-  missing_columns <- setdiff(required_columns, names(dat))
-  
-  if (length(missing_columns) > 0) {
-    stop(
-      "study_05 is missing required columns: ",
-      paste(missing_columns, collapse = ", ")
-    )
-  }
-  
-  # ============================================================
-  # Row 3: senior-year 16-item quiz performance
-  # ============================================================
-  
-  quiz_psychology <- dat$`16ItemQuizFollowupPerformance`[
-    dat$Speciality == 1
-  ]
-  
-  quiz_nonpsychology <- dat$`16ItemQuizFollowupPerformance`[
-    dat$Speciality == 0
-  ]
-  
-  quiz_psychology <- quiz_psychology[!is.na(quiz_psychology)]
-  quiz_nonpsychology <- quiz_nonpsychology[!is.na(quiz_nonpsychology)]
-  
-  quiz_t_test <- stats::t.test(
-    x = quiz_psychology,
-    y = quiz_nonpsychology,
-    var.equal = TRUE,
-    alternative = "two.sided"
-  )
-  
-  quiz_n1 <- length(quiz_psychology)
-  quiz_n2 <- length(quiz_nonpsychology)
-  
-  quiz_mean1 <- mean(quiz_psychology)
-  quiz_mean2 <- mean(quiz_nonpsychology)
-  
-  quiz_sd1 <- stats::sd(quiz_psychology)
-  quiz_sd2 <- stats::sd(quiz_nonpsychology)
-  
-  quiz_pooled_sd <- sqrt(
-    ((quiz_n1 - 1) * quiz_sd1^2 + (quiz_n2 - 1) * quiz_sd2^2) /
-      (quiz_n1 + quiz_n2 - 2)
-  )
-  
-  quiz_mean_difference <- quiz_mean1 - quiz_mean2
-  
-  quiz_se_difference <- quiz_pooled_sd * sqrt(
-    1 / quiz_n1 + 1 / quiz_n2
-  )
-  
-  quiz_cohens_d <- quiz_mean_difference / quiz_pooled_sd
-  
-  quiz_n_eff <- (quiz_n1 * quiz_n2) / (quiz_n1 + quiz_n2)
-  
-  row_3 <- tibble::tibble(
-    id = 3,
-    study_id = "study_5",
-    study_DOI = "10.1037/stl0000136",
-    analysis_label = "key_result_senior_quiz_performance",
-    stat_test = "independent_t_test",
-    reported_result = "t(154) = 3.26, p = .001, d = 0.74",
-    
-    p_value = as.numeric(quiz_t_test$p.value),
-    p_operator = "=",
-    p_sidedness = "two_sided",
-    
-    t_value = as.numeric(quiz_t_test$statistic),
-    t_df = as.numeric(quiz_t_test$parameter),
-    
-    f_value = NA_real_,
-    f_df1 = NA_real_,
-    f_df2 = NA_real_,
-    
-    z_value = NA_real_,
-    
-    chi2_value = NA_real_,
-    chi2_df = NA_real_,
-    
-    r_value = NA_real_,
-    
-    n1 = quiz_n1,
-    n2 = quiz_n2,
-    n_total = quiz_n1 + quiz_n2,
-    n_eff = quiz_n_eff,
-    
-    effect_size_type = "cohens_d",
-    effect_size_value = quiz_cohens_d,
-    
-    estimate = quiz_mean_difference,
-    se_estimate = quiz_se_difference,
-    
-    statistic_source = "recomputed_from_raw_data",
-    
-    notes = paste0(
-      "Recomputed from raw CSV using Student independent-samples t-test. ",
-      "Outcome: senior-year 16-item quiz performance. ",
-      "Group variable: Speciality; 1 = psychology students, 0 = nonpsychology students. ",
-      "Psychology students n1 = ", quiz_n1, "; nonpsychology students n2 = ", quiz_n2, ". ",
-      "Mean psychology = ", round(quiz_mean1, 6), "; mean nonpsychology = ", round(quiz_mean2, 6), ". ",
-      "SD psychology = ", round(quiz_sd1, 6), "; SD nonpsychology = ", round(quiz_sd2, 6), "."
-    )
-  )
-  
-  # ============================================================
-  # Row 4: number of additional psychology courses
-  # ============================================================
-  
-  courses_psychology <- dat$NumPsychClass[
-    dat$Speciality == 1
-  ]
-  
-  courses_nonpsychology <- dat$NumPsychClass[
-    dat$Speciality == 0
-  ]
-  
-  courses_psychology <- courses_psychology[!is.na(courses_psychology)]
-  courses_nonpsychology <- courses_nonpsychology[!is.na(courses_nonpsychology)]
-  
-  courses_t_test <- stats::t.test(
-    x = courses_psychology,
-    y = courses_nonpsychology,
-    var.equal = TRUE,
-    alternative = "two.sided"
-  )
-  
-  courses_n1 <- length(courses_psychology)
-  courses_n2 <- length(courses_nonpsychology)
-  
-  courses_mean1 <- mean(courses_psychology)
-  courses_mean2 <- mean(courses_nonpsychology)
-  
-  courses_sd1 <- stats::sd(courses_psychology)
-  courses_sd2 <- stats::sd(courses_nonpsychology)
-  
-  courses_pooled_sd <- sqrt(
-    ((courses_n1 - 1) * courses_sd1^2 + (courses_n2 - 1) * courses_sd2^2) /
-      (courses_n1 + courses_n2 - 2)
-  )
-  
-  courses_mean_difference <- courses_mean1 - courses_mean2
-  
-  courses_se_difference <- courses_pooled_sd * sqrt(
-    1 / courses_n1 + 1 / courses_n2
-  )
-  
-  courses_cohens_d <- courses_mean_difference / courses_pooled_sd
-  
-  courses_n_eff <- (courses_n1 * courses_n2) / (courses_n1 + courses_n2)
-  
-  row_4 <- tibble::tibble(
-    id = 4,
-    study_id = "study_5",
-    study_DOI = "10.1037/stl0000136",
-    analysis_label = "second_result_number_of_additional_psychology_courses",
-    stat_test = "independent_t_test",
-    reported_result = "t(154) = 16.06, p = .001, d = 3.63",
-    
-    p_value = as.numeric(courses_t_test$p.value),
-    p_operator = "=",
-    p_sidedness = "two_sided",
-    
-    t_value = as.numeric(courses_t_test$statistic),
-    t_df = as.numeric(courses_t_test$parameter),
-    
-    f_value = NA_real_,
-    f_df1 = NA_real_,
-    f_df2 = NA_real_,
-    
-    z_value = NA_real_,
-    
-    chi2_value = NA_real_,
-    chi2_df = NA_real_,
-    
-    r_value = NA_real_,
-    
-    n1 = courses_n1,
-    n2 = courses_n2,
-    n_total = courses_n1 + courses_n2,
-    n_eff = courses_n_eff,
-    
-    effect_size_type = "cohens_d",
-    effect_size_value = courses_cohens_d,
-    
-    estimate = courses_mean_difference,
-    se_estimate = courses_se_difference,
-    
-    statistic_source = "recomputed_from_raw_data",
-    
-    notes = paste0(
-      "Recomputed from raw CSV using Student independent-samples t-test. ",
-      "Outcome: number of additional psychology courses. ",
-      "Group variable: Speciality; 1 = psychology students, 0 = nonpsychology students. ",
-      "Psychology students n1 = ", courses_n1, "; nonpsychology students n2 = ", courses_n2, ". ",
-      "Mean psychology = ", round(courses_mean1, 6), "; mean nonpsychology = ", round(courses_mean2, 6), ". ",
-      "SD psychology = ", round(courses_sd1, 6), "; SD nonpsychology = ", round(courses_sd2, 6), "."
-    )
-  )
-  
-  # ============================================================
-  # Save standardised recomputed rows
-  # ============================================================
-  
+  check_required_packages(c("readr", "dplyr", "tibble"))
+  data_path <- resolve_existing_file(c(
+    data_path,
+    "data/raw/study_05/HardLovettBrady_Data_Shared.csv"
+  ), "study_05 raw CSV")
+
+  dat <- readr::read_csv(data_path, show_col_types = FALSE)
+
   rows <- dplyr::bind_rows(
-    row_3,
-    row_4
+    recompute_study_05_independent_t(
+      dat, 3,
+      "senior_year_16_item_quiz_performance",
+      "16ItemQuizFollowupPerformance",
+      "t(154) = 3.26, p < .001, d = 0.74",
+      0.001, 0.74, data_path
+    ),
+    recompute_study_05_independent_t(
+      dat, 4,
+      "number_of_additional_psychology_courses",
+      "NumPsychClass",
+      "t(154) = 16.06, p < .001, d = 3.63",
+      0.001, 3.63, data_path
+    )
   )
-  
-  dir.create(
-    path = dirname(output_path),
-    recursive = TRUE,
-    showWarnings = FALSE
-  )
-  
-  readr::write_csv(
-    x = rows,
-    file = output_path
-  )
-  
-  rows
+
+  write_recomputed_results(rows, output_path)
 }

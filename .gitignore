@@ -31,4 +31,5 @@ docs/*.html
 *.toc
 *.synctex.gz
 *.fls
-*.fdb_latexmk
+*.fdb_latexmk/data/raw/
+data/raw/
