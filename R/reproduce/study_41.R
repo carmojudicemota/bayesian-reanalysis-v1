@@ -1,82 +1,243 @@
-# R/reproduce/study_41.R
-# Study 41: Kelly & Parrish. DOI: 10.1177/00986283251313760
-# Reconstructs rows id 28 and 29: paired pre-post skill ratings.
+# Study 41: Kelly & Parrish (2025)
+# Reproduction of paired-samples t tests from the deidentified content-knowledge data.
+#
+# Important:
+# - The article reports N = 37 students who consented to data use.
+# - The target item analyses use pairwise-complete observations, not mean imputation.
+# - For "Statistically analyze data", n_complete = 30 and df = 29.
+# - For "Interpret data by relating results to the original hypothesis",
+#   n_complete = 29 and df = 28.
+# - The article reports positive t and d values because change is interpreted as POST - PRE.
 
-if (!exists("make_recomputed_row")) source("R/reproduce/00_reproduction_helpers.R")
+#' Check packages needed for Study 41
+#'
+#' @return Invisibly returns TRUE.
+check_study_41_packages <- function() {
+  required <- c("readxl", "readr", "dplyr", "tibble")
+  missing <- required[!vapply(required, requireNamespace, logical(1), quietly = TRUE)]
 
-recompute_study_41_paired <- function(dat, id, analysis_label, pre_var, post_var,
-                                      reported_result, reported_effect_size_value,
-                                      raw_data_file) {
-  pre <- as.numeric(dat[[pre_var]])
-  post <- as.numeric(dat[[post_var]])
-  keep <- stats::complete.cases(pre, post)
-  pre <- pre[keep]
-  post <- post[keep]
-  test_result <- stats::t.test(x = post, y = pre, paired = TRUE, alternative = "two.sided")
-  diff <- post - pre
-  n <- length(diff)
-  mean_difference <- mean(diff)
-  sd_difference <- stats::sd(diff)
-  se_difference <- sd_difference / sqrt(n)
-  d_z <- mean_difference / sd_difference
+  if (length(missing) > 0L) {
+    stop(
+      "Install the required packages before running Study 41: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
 
-  make_recomputed_row(
-    id = id,
+  invisible(TRUE)
+}
+
+#' Read and validate the Study 41 content-knowledge workbook
+#'
+#' @param path Path to BART Content Knowledge_Deidentified.xlsx.
+#'
+#' @return A tibble containing the original 37 rows.
+read_study_41_data <- function(path) {
+  check_study_41_packages()
+
+  if (!file.exists(path)) {
+    stop("Study 41 data file does not exist: ", path, call. = FALSE)
+  }
+
+  dat <- readxl::read_excel(path, sheet = "Sheet1")
+  dat <- tibble::as_tibble(dat)
+
+  required <- c(
+    "ID",
+    "PRE_Analyze",
+    "POST_Analyze",
+    "PRE_Intr data",
+    "POST_Intr data"
+  )
+
+  missing <- setdiff(required, names(dat))
+  if (length(missing) > 0L) {
+    stop(
+      "Study 41 workbook is missing required columns: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if (nrow(dat) != 37L) {
+    warning(
+      "Expected 37 consented students, but the workbook contains ",
+      nrow(dat),
+      " rows.",
+      call. = FALSE
+    )
+  }
+
+  dat
+}
+
+#' Reproduce one paired-samples result for Study 41
+#'
+#' @param dat Study 41 data frame.
+#' @param pre Name of the pre-test variable.
+#' @param post Name of the post-test variable.
+#' @param analysis_id Stable analysis identifier.
+#' @param outcome Human-readable outcome label.
+#' @param reported_t Published t value.
+#' @param reported_d Published Cohen's d value.
+#'
+#' @return A one-row tibble with exact recomputed statistics.
+reproduce_study_41_pair <- function(dat,
+                                    pre,
+                                    post,
+                                    analysis_id,
+                                    outcome,
+                                    reported_t,
+                                    reported_d) {
+  stopifnot(
+    is.data.frame(dat),
+    length(pre) == 1L,
+    length(post) == 1L,
+    pre %in% names(dat),
+    post %in% names(dat)
+  )
+
+  x_pre <- suppressWarnings(as.numeric(dat[[pre]]))
+  x_post <- suppressWarnings(as.numeric(dat[[post]]))
+  keep <- stats::complete.cases(x_pre, x_post)
+
+  pre_complete <- x_pre[keep]
+  post_complete <- x_post[keep]
+  difference <- post_complete - pre_complete
+
+  n_complete <- length(difference)
+  if (n_complete < 2L) {
+    stop("Fewer than two complete pairs for outcome: ", outcome, call. = FALSE)
+  }
+
+  difference_sd <- stats::sd(difference)
+  if (!is.finite(difference_sd) || difference_sd <= 0) {
+    stop("Difference-score SD is not positive for outcome: ", outcome, call. = FALSE)
+  }
+
+  test <- stats::t.test(
+    post_complete,
+    pre_complete,
+    paired = TRUE,
+    alternative = "two.sided",
+    conf.level = 0.95
+  )
+
+  t_value <- unname(test$statistic)
+  df_value <- unname(test$parameter)
+  p_value <- unname(test$p.value)
+
+  # Cohen's dz for paired data: mean(POST - PRE) / SD(POST - PRE).
+  cohen_dz <- mean(difference) / difference_sd
+
+  tibble::tibble(
     study_id = "study_41",
-    study_DOI = "10.1177/00986283251313760",
-    recomputation_status = "recomputed_from_raw_data",
+    analysis_id = analysis_id,
+    outcome = outcome,
+    recomputation_status = "recomputed_from_raw_data_pairwise_complete",
     stat_test = "paired_t_test",
-    reported_result = reported_result,
-    reported_p_value = 0.001,
-    reported_p_operator = "<",
-    reported_p_sidedness = "two_sided",
-    reported_effect_size_type = "cohens_d",
-    reported_effect_size_value = reported_effect_size_value,
-    p_value = as.numeric(test_result$p.value),
-    p_operator = "=",
-    p_sidedness = "two_sided",
-    t_value = as.numeric(test_result$statistic),
-    t_df = as.numeric(test_result$parameter),
-    n_total = n,
-    n_eff = n,
-    effect_size_type = "cohens_dz_paired",
-    effect_size_value = d_z,
-    estimate = mean_difference,
-    se_estimate = se_difference,
-    raw_data_file = raw_data_file,
-    raw_variable_names = paste(pre_var, post_var, sep = "; "),
-    model_formula = paste0("paired t-test: ", post_var, " - ", pre_var),
-    contrast_direction = "post minus pre",
-    analysis_label = analysis_label,
-    statistic_source = "stats::t.test(paired = TRUE) on complete pairs",
-    bayesian_input_status = bayes_status_from_test("paired_t_test"),
-    extraction_note = paste0(
-      "Recovered paired n, t, df, exact p, mean difference, SE and paired dz. ",
-      "Pre mean = ", round(mean(pre), 6), "; post mean = ", round(mean(post), 6),
-      "; pre SD = ", round(stats::sd(pre), 6), "; post SD = ", round(stats::sd(post), 6), "."
+    subtraction_direction = "post_minus_pre",
+    n_total = nrow(dat),
+    n_complete = n_complete,
+    n_missing_pair = nrow(dat) - n_complete,
+    df = df_value,
+    pre_mean = mean(pre_complete),
+    pre_sd = stats::sd(pre_complete),
+    post_mean = mean(post_complete),
+    post_sd = stats::sd(post_complete),
+    mean_difference = mean(difference),
+    sd_difference = difference_sd,
+    t_value = t_value,
+    p_value = p_value,
+    p_operator = ifelse(p_value < 0.001, "<", "="),
+    effect_size_type = "cohen_dz",
+    effect_size_value = cohen_dz,
+    reported_t = reported_t,
+    reported_d = reported_d,
+    t_absolute_difference = abs(abs(t_value) - reported_t),
+    d_absolute_difference = abs(abs(cohen_dz) - reported_d),
+    matches_reported_t = abs(abs(t_value) - reported_t) < 0.01,
+    matches_reported_d = abs(abs(cohen_dz) - reported_d) < 0.01,
+    notes = paste0(
+      "No imputation. Analysis uses pairwise-complete PRE/POST values. ",
+      "The article table reports t and d but does not report df; df follows from ",
+      "the number of complete pairs. Positive signs reflect POST - PRE."
     )
   )
 }
 
-reproduce_study_41 <- function(
-    data_path = "data/raw/study_41/Untitled3.sav",
-    output_path = "outputs/reproduced/study_41_recomputed.csv"
-) {
-  check_required_packages(c("haven", "dplyr", "tibble", "readr"))
-  data_path <- resolve_existing_file(c(data_path, "data/raw/study_41/Untitled3.sav"), "study_41 SPSS file")
-  dat <- haven::read_sav(data_path)
-  check_required_columns(dat, c("PRE_Analyze", "POST_Analyze", "PRE_Intrdata", "POST_Intrdata"), "study_41")
+#' Reproduce all target results for Study 41
+#'
+#' @param path Path to BART Content Knowledge_Deidentified.xlsx.
+#'
+#' @return A two-row tibble.
+reproduce_study_41 <- function(path) {
+  dat <- read_study_41_data(path)
 
-  rows <- dplyr::bind_rows(
-    recompute_study_41_paired(
-      dat, 28, "statistically_analyze_data", "PRE_Analyze", "POST_Analyze",
-      "t(36) = 8.53, p < .001, d = 1.56", 1.56, data_path
-    ),
-    recompute_study_41_paired(
-      dat, 29, "interpret_data_by_relating_results_to_hypothesis", "PRE_Intrdata", "POST_Intrdata",
-      "t(36) = 6.15, p < .001, d = 1.14", 1.14, data_path
-    )
+  result_1 <- reproduce_study_41_pair(
+    dat = dat,
+    pre = "PRE_Analyze",
+    post = "POST_Analyze",
+    analysis_id = "study_41_result_1",
+    outcome = "Statistically analyze data",
+    reported_t = 8.53,
+    reported_d = 1.56
   )
 
-  write_recomputed_results(rows, output_path)
+  result_2 <- reproduce_study_41_pair(
+    dat = dat,
+    pre = "PRE_Intr data",
+    post = "POST_Intr data",
+    analysis_id = "study_41_result_2",
+    outcome = "Interpret data by relating results to the original hypothesis",
+    reported_t = 6.15,
+    reported_d = 1.14
+  )
+
+  dplyr::bind_rows(result_1, result_2)
+}
+
+#' Write Study 41 reproduction and audit outputs
+#'
+#' @param results Output from reproduce_study_41().
+#' @param output_path Main CSV path.
+#' @param audit_path Audit CSV path.
+#'
+#' @return Invisibly returns the results.
+write_study_41_outputs <- function(results,
+                                   output_path,
+                                   audit_path) {
+  dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
+  dir.create(dirname(audit_path), recursive = TRUE, showWarnings = FALSE)
+
+  readr::write_csv(results, output_path, na = "")
+
+  audit <- results |>
+    dplyr::select(
+      study_id,
+      analysis_id,
+      outcome,
+      n_total,
+      n_complete,
+      n_missing_pair,
+      df,
+      pre_mean,
+      pre_sd,
+      post_mean,
+      post_sd,
+      mean_difference,
+      sd_difference,
+      t_value,
+      p_value,
+      effect_size_type,
+      effect_size_value,
+      reported_t,
+      reported_d,
+      matches_reported_t,
+      matches_reported_d,
+      notes
+    )
+
+  readr::write_csv(audit, audit_path, na = "")
+  invisible(results)
 }
