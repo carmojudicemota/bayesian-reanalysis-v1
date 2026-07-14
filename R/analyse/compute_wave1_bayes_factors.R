@@ -11,23 +11,26 @@ compute_wave1_bayes_factors <- function(
   claims <- read_csv(claims_path, show_col_types = FALSE)
   priors <- read_csv(priors_path, show_col_types = FALSE)
 
+  # NOTE: build_claims_draft() renames verified_results_draft.csv's stat_test
+  # column to frequentist_test in the final claims table -- filter/mutate
+  # against that name, not "stat_test".
   wave1 <- claims |>
     filter(status == "ready") |>
-    filter(stat_test %in% c(
+    filter(frequentist_test %in% c(
       "one_sample_t_test", "paired_t_test",
       "independent_t_test", "repeated_measures_anova",
       "pearson_correlation"
     )) |>
     mutate(
-      bf_family = if_else(stat_test == "pearson_correlation", "correlation", "t_test"),
+      bf_family = if_else(frequentist_test == "pearson_correlation", "correlation", "t_test"),
       # study_22 is repeated_measures_anova with numerator df = 1, algebraically
       # a paired t-test (F = t^2). Treat it as paired for the BF step only.
       t_for_bf = if_else(
-        stat_test == "repeated_measures_anova" & is.na(t_value) & !is.na(f_value),
+        frequentist_test == "repeated_measures_anova" & is.na(t_value) & !is.na(f_value),
         sqrt(f_value), t_value
       ),
       df_for_bf = if_else(
-        stat_test == "repeated_measures_anova" & is.na(t_df) & !is.na(f_df2),
+        frequentist_test == "repeated_measures_anova" & is.na(t_df) & !is.na(f_df2),
         f_df2, t_df
       )
     )
@@ -67,7 +70,7 @@ compute_wave1_bayes_factors <- function(
       tibble(
         claim_id = row$claim_id,
         study_id = row$study_id,
-        stat_test = row$stat_test,
+        stat_test = row$frequentist_test,   # renamed back for downstream consistency
         bf_family = row$bf_family,
         prior_label = p$prior_label,
         rscale = p$rscale,
