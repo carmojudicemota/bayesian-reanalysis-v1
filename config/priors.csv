@@ -1,0 +1,7 @@
+family,prior_label,rscale
+t_test,narrow,0.5
+t_test,primary,0.707
+t_test,wide,1.0
+correlation,narrow,0.5
+correlation,primary,1.0
+correlation,wide,1.5

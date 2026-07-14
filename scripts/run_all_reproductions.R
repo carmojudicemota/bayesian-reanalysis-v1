@@ -1,42 +1,29 @@
 # scripts/run_all_reproductions.R
-# Runs every current study-specific information-recovery script.
+# Runs every study-specific reproduction script, then compiles the results.
+# Scripts are discovered dynamically (glob on R/reproduce/study_*.R) instead
+# of a hand-maintained list, so adding a new study script is picked up
+# automatically instead of silently being left out of "run everything".
 
 source("R/reproduce/00_reproduction_helpers.R")
 
-study_scripts <- c(
-  "R/reproduce/study_05.R",
-  "R/reproduce/study_06.R",
-  "R/reproduce/study_10.R",
-  "R/reproduce/study_13.R",
-  "R/reproduce/study_14.R",
-  "R/reproduce/study_20.R",
-  "R/reproduce/study_21.R",
-  "R/reproduce/study_30.R",
-  "R/reproduce/study_33.R",
-  "R/reproduce/study_41.R",
-  "R/reproduce/study_49.R",
-  "R/reproduce/study_51.R",
-  "R/reproduce/study_53.R"
-)
+study_scripts <- sort(list.files(
+  path = "R/reproduce", pattern = "^study_[0-9]+\\.R$", full.names = TRUE
+))
+message("Found ", length(study_scripts), " study reproduction scripts.")
 
 for (script in study_scripts) source(script)
 
-results <- dplyr::bind_rows(
-  reproduce_study_05(),
-  reproduce_study_06(),
-  reproduce_study_10(),
-  reproduce_study_13(),
-  reproduce_study_14(),
-  reproduce_study_20(),
-  reproduce_study_21(),
-  reproduce_study_30(),
-  reproduce_study_33(),
-  reproduce_study_41(),
-  reproduce_study_49(),
-  reproduce_study_51(),
-  reproduce_study_53()
-)
+reproduce_fns <- sort(ls(pattern = "^reproduce_study_[0-9]+$", envir = .GlobalEnv))
+if (length(reproduce_fns) != length(study_scripts)) {
+  warning(
+    length(study_scripts), " scripts sourced but only ", length(reproduce_fns),
+    " reproduce_study_*() functions found -- check for naming mismatches."
+  )
+}
 
-readr::write_csv(results, "outputs/reproduced/all_recomputed_results_current_studies.csv")
-print(results)
-message("All recomputation scripts complete: outputs/reproduced/all_recomputed_results_current_studies.csv")
+for (fn_name in reproduce_fns) {
+  message("Running ", fn_name, "()...")
+  get(fn_name)()
+}
+
+source("R/reproduce/98_compile_recomputed_results.R")
