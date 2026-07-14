@@ -1,5 +1,6 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[strings]{underscore}
+\usepackage{amsmath}
 % ------------------------------------------------------------
 % Page setup
 % ------------------------------------------------------------
@@ -150,38 +151,331 @@
 \begin{itemize}
     \item Filled Master Spreadsheet template with the values from selected Ali studies (AI); Created the .csv file, some data still missing
     \item Coded: \texttt{00_setup.R} (reads the input csv index); \texttt{01_prepare_data.R} (creates necessary variables, sanity checks for data in index); \texttt{02_frequentist_checks.R} (runs sanity checks on frequentist results in csv) 
-    \item 
+    \item Identified missing data that is still needed
+    \item Reproduced \texttt{study_5}, \texttt{study_13}
+    \item Calculated the Bayes factors for \texttt{study 13} with \textbf{JASP} and \textbf{R} by means including raw data and summary statsitics (including t, mean and sd, cohen's d)
 \end{itemize}
 
 \subsection{Technical and Statistical Decisions}
 
 \begin{itemize}
-    \item 
-    \item 
-    \item 
+    \item Due to approximations in original articles and Ali's dataset, we decided to use AI to help re-run Ali's scripts and reproduce his results, without rounding them and taking all the information still missing that was needed to compute important statistics
+
+\end{itemize}
+
+\subsection{Problems Encountered}
+
+\begin{itemize}
+    \item \textbf{Study 13:}
+    
+    The S.S. Bayesian factor (JASP) result of the DVs "Objective knowledge", "Subjective knowledge", "Bias awareness" disagrees with the results get from the Bayesian factor result calculated by the whole data set (JASP).
+DVs "Behaviroal intentions", "Internal motivation" and "Belonging" show only small gaps between results of the 2 means. The most likely explanation for that is the t-value used is rounded, so it's a rounding error.
+
+Fact: "Objective knowledge", "Subjective knowledge", "Bias awareness" use Welch's t-test while the "Behaviroal intentions", "Internal motivation" and "Belonging" use general t test. 
+Hypothesis: S.S. BISTT works well only for the DVs that has a general t-value, not for the Welch's t value.
+    \item Bayes factors can get very large: rounding of summary statistics can lead to different results. Should we ignore the difference in large numbers as long as they are all pointing to the same interpretation?
+    \item The latex template found may not be suitable for our project. Some requirements, such as blinding, clearly will not be applicable in our research
+    \item Still unclear about how to proceed with the Bayes factor calculation accurately $\Rightarrow$ Moving on to some macro-scope work for now.
+\end{itemize}
+
+\subsection{Fixes Attempted}
+
+\begin{itemize}
+    \item Summary statistics "Cohen's d" and "means and sd" were used to produce the Bayes factor, but the results are still not agreed upon.
+    \item Consult more Prereg templates and tutorials
+\end{itemize}
+
+\subsection{What Was Learned}
+
+\begin{itemize}
+    \item Mann-Whitney U test $\rightarrow$ comparing ranks regardless of variance assumptions and normality assumptions; Maybe a good choice in some cases, awaiting more exploration in future studies.
+    \item \textbf{As we decided to proceed with Bayes factor calculation based on summary statistics, we will ignore the influence caused by the outliers.}
+\end{itemize}
+
+\subsection{Next Steps}
+
+\begin{itemize}
+    \item Clarify the working flow and finish writing the Prereg.
+    \item Research informed prior
+    \item Finish reproducing the study's from Ali's files
+\end{itemize}
+\entryseparator
+
+
+\section{July 10th, 2026}
+
+\subsection{Work Completed}
+
+\begin{itemize}
+    \item Reproduced from Ali's files:  \texttt{study_3}, \texttt{study_6}, \texttt{study_10}, \texttt{study_14}, \texttt{study_18}, \texttt{study_20}, \texttt{study_21}, \texttt{study_30}, \texttt{study_33}, \texttt{study_39}, \texttt{study_41}, \texttt{study_49}, \texttt{study_51}, \texttt{study_53}, \texttt{study_17}, \texttt{study_26}, \texttt{study_35}, \texttt{study_37}, \texttt{study_40}, \texttt{study_43}, \texttt{study_44}, \texttt{study_45}, \texttt{study_47}, \texttt{study_55}, \texttt{study_60} $\rightarrow $ Completed
+    \item Compiled every study's individual data into one .csv file
+    \item Checked the complete .csv file for inconsistencies and checked it for Bayesian readiness $\rightarrow$ Inconsistencies in a few studies, mainly non-problematic ones; saw that we need to add more columns in order to run Bayesian analysis
+    \item Prereg draft \texttt{Study information} and \texttt{Design plan}
+\end{itemize}
+
+\subsection{Technical and Statistical Decisions}
+
+\begin{itemize}
+    \item No necessary technical decisions
+
+\end{itemize}
+
+\subsection{Problems Encountered}
+
+\begin{itemize}
+    \item Problem (1) \texttt{study_17} didn't have a sample selection rule included in Ali's files, so even though the article used $n = 24$ the public file data has $n = 42$ cases. Why this happened: the author used aggregate variables from the original sample. 
+    \item Upon analysing the final .csv file a few discrepancies were found that still need to be revised and analysed:
+    
+\texttt{study_5} the reported result for $t(154) = 3.26$ is $p<0.001$, but the exact p-value is $0.001357$. $\rightarrow$ the article claims "=" not "$<$" so probably a typing error, will correct on spreadsheet and .csv file.
+
+\texttt{study_33} the label says $p=.001$, but exact $p$ is $5.65 \times e^{-9}$, so maybe there is a formating error on sign "=" that should really be "$<$" 
+
+\texttt{study_53} the label is $p = 0.00$ which is not valid, the result is $p = 0.00115$ so maybe it is a typing error and it was meant to be $p = 0.001$ which is true with approximation. 
+
+\texttt{study_35} there was a serious mismatch reported $F(2,116)=4.22$, but recomputed $F=10.43$
+Upon analysing Ali's own script, there was a note saying that he still got a much higher F after trying variable-order fixes. The later note says the correct analysis should be a 2 × 3 mixed ANOVA with Sex as the between-subjects factor. That matches the article’s stated design, but it still gives the higher F from the actual data. The article reports: $F(2,116)=4.22$,$ p<.02$, $eta_p2=.07$ with means: $RR = 22.02$, $MMRP = 35.24$, $RP = 38.33$. The full Excel data file reproduces the means exactly, but not the inferential F. $\rightarrow$ Consider maybe eliminating this study from the analysis, or further investigate
+
+\texttt{study_41} Ali appears to have copied the published $t$- and $d$-values correctly but inferred $df=36$ from the total consenting sample of $N=37$, implicitly assuming complete data for every paired comparison. The original data file shows missing data, leaving 30 complete pairs for “Statistically analyse data” and 29 complete pairs for “Interpret data by relating results to the original hypothesis,” so the correct results are $t(29)=8.53$, $p<.001$,$d=1.56$ and $t(28)=6.15$,$p<.001$,$d=1.14$. So there might be a degrees-of-freedom transcription error in Ali’s notes, but not as a failure to reproduce the study, because the results are correct.
+
+
+
+\end{itemize}
+
+\subsection{Fixes Attempted}
+
+\begin{itemize}
+    \item The solution for the discrepancies found along the way was to use the original article's data files to recompute the statistics and to later inspect more carefully the claims made in the original article
+
+\end{itemize}
+
+\subsection{What Was Learned}
+
+\begin{itemize}
+    \item Typing errors are human and might be present along the way, including checks in the code is the best measure, even if they might seem redundant 
+    \item Multiplicity of data formats, not including the code and undocumented decisions make reproduction much harder, even in studies where it is possible apriori, such as the ones in our scope
+\end{itemize}
+
+\subsection{Next Steps}
+
+\begin{itemize}
+    \item Continue OSF report
+    \item Rethink repository structure due to the more complete reconstruction
+    \item Recover necessary data for Bayesian reanalysis
+    \item Write and execute the script for the first phase of the Bayesian reanalysis 
+\end{itemize}
+\entryseparator
+
+
+\section{July 13th, 2026}
+
+\subsection{Work Completed}
+
+\begin{itemize}
+    \item Conceptual revision of the pipeline, statistical models and project details necessary for writing the OSF
+    \item Wrote the first draft of the OSF 
+
+\end{itemize}
+
+\subsection{Technical and Statistical Decisions}
+
+\begin{itemize}
+    \item We should prefer the raw data and only use the summary statistics to compute BF when they completely identify the model. For example models like MANOVA, SEM, repeated-measures, heteroscedastic, ordinal, and rank-based analyses are not reduced to generic scalar approximations and the bayesian version of the whole model must be recomputed. So we have:
+    \begin{enumerate}
+        \item Raw-data model: Preferred whenever participant-level data and the design are available.
+        \item Exact sufficient statistics. When the summary statistics identify the intended Bayesian model.
+        \item Reconstructed statistics. If the reconstruction is possible and mathematically exact.
+        \item Insufficient information. No Bayes factor is computed.
+
+    \end{enumerate}
+    \item Decided to conduct the project by waves, where each wave goes through the whole pipeline, starting from the easiest models to the more complex ones, if there is time. There will be three waves:
+    \begin{enumerate}
+        \item Wave 1: direct and well-defined models: One-sample, paired, equal-variance independent-group, and Pearson-correlation. So, studies 5, 14, 21, 22, 30, 33, 41, 51, and 53. Study 49 if the directionality is resolved.
+        \item Wave 2: raw-data regression and ANOVA families. Studies 6, 10, 13, 43, 47, 55, and 60. These require full model fitting. Study 13 needs a heteroscedastic two-group model; Study 55 needs heteroscedastic group variances; Study 60 needs article-matching and robustness variants.
+        \item Wave 3: specialised models, like multivariate, SEM, rank, and ordinal families, including Studies 3, 18, 20, 26, 39, 40, 44, and 45.
+        \item Study 35 excluded until we can match the published frequentist result.
+        \end{enumerate}
+    \item Measured quantities: they are claim-level quantities and should include:
+    \begin{enumerate}
+        \item frequentist information: exact \(p\)-value, statistic, degrees of freedom, analysis sample size, group sizes, effect estimate, standard error, test sidedness, and model family;
+        \item Bayesian information: \(BF_{10}\), \(BF_{01}\), \(\log(BF_{10})\), posterior effect estimate, credible interval, probability of the predicted direction when relevant, prior specification, sensitivity results, and diagnostics;
+        \item concordance information: frequentist decision, Bayesian evidence category, final concordance category, and whether the conclusion changes under alternative priors or thresholds;
+        \item possible drivers: sample size, effect magnitude, standard error, model family, dependence structure, heteroscedasticity, directionality, data-input level, prior width, claim role, and study identifier.
+    \end{enumerate}
+    \item The primary frequentist decision is
+\[
+F_c =
+\begin{cases}
+1, & p_c<.05,\\
+0, & p_c\geq .05.
+\end{cases}
+\]
+
+This is only the conventional decision rule. We should always retain the exact \(p\)-value because \(p=.049\) and \(p=.001\) should not be presented as if they are equally far from the threshold.
+
+For descriptive plots, it may be useful to keep the bands
+\[
+p<.001,\qquad
+.001\leq p<.01,\qquad
+.01\leq p<.05,\qquad
+.05\leq p<.10,\qquad
+p\geq .10.
+\]
+These are location bands, not direct probabilities of the hypotheses. 
+
+    \item Decided to usa a symmetric adaptation of Jeffreys' of Bayes factor evidence bands for tables and plot:
+\[
+\begin{array}{ll}
+BF_{10}<1/100 & \text{decisive evidence for }M_0,\\
+1/100\leq BF_{10}<1/30 & \text{very strong evidence for }M_0,\\
+1/30\leq BF_{10}<1/10 & \text{strong evidence for }M_0,\\
+1/10\leq BF_{10}<1/3 & \text{substantial evidence for }M_0,\\
+1/3\leq BF_{10}<1 & \text{anecdotal tendency toward }M_0,\\
+BF_{10}=1 & \text{equal predictive support},\\
+1<BF_{10}<3 & \text{anecdotal tendency toward }M_1,\\
+3\leq BF_{10}<10 & \text{substantial evidence for }M_1,\\
+10\leq BF_{10}<30 & \text{strong evidence for }M_1,\\
+30\leq BF_{10}<100 & \text{very strong evidence for }M_1,\\
+BF_{10}\geq100 & \text{decisive evidence for }M_1.
+\end{array}
+\]
+
+(The labels are communication aids. The exact Bayes factor and its logarithm should remain the main reported values.)
+
+    \item As they are very detailed for the headline concordance table, these can be collapsed into:
+\[
+B_c =
+\begin{cases}
+M_1, & BF_{10,c}>3,\\
+I, & 1/3\leq BF_{10,c}\leq3,\\
+M_0, & BF_{10,c}<1/3,
+\end{cases}
+\]
+where \(I\) means inconclusive.
+
+Crossing \(F_c\) and \(B_c\) gives:
+\begin{enumerate}
+    \item significant and evidence for \(M_1\);
+    \item significant but Bayesian-inconclusive;
+    \item significant and evidence for \(M_0\);
+    \item non-significant and evidence for \(M_0\);
+    \item non-significant and Bayesian-inconclusive;
+    \item non-significant and evidence for \(M_1\).
+\end{enumerate}
+
+I think it is useful to distinguish:
+\begin{itemize}
+    \item \emph{effect concordance}: significant and evidence for \(M_1\);
+    \item \emph{null concordance}: non-significant and evidence for \(M_0\);
+    \item \emph{resolution difference}: one framework gives a conventional decision while the Bayesian result is inconclusive;
+    \item \emph{direct discordance}: the two frameworks favour opposite sides.
+\end{itemize}
+
+    \item For more useful concordance analysis we can use continuous evidence plane
+
+The main continuous coordinates should be
+\[
+X_c=-\log_{10}(p_c),
+\qquad
+Y_c=\log_{10}(BF_{10,c}).
+\]
+
+The frequentist threshold is
+\[
+-\log_{10}(.05)\approx1.301,
+\]
+and the Bayesian \(3{:}1\) thresholds are
+\[
+\log_{10}(3)\approx0.477
+\quad\text{and}\quad
+-\log_{10}(3)\approx-0.477.
+\]
+
+This lets us see whether a result is barely over a line or far inside a concordant/discordant region.
+
+    \item For calculating prior sensitivity we can use the follwing formulation:
+
+For prior specification \(k\), let
+\[
+L_{ck}=\log_{10}(BF_{10,ck}).
+\]
+A simple sensitivity span is
+\[
+S_c=
+\max_k L_{ck}-\min_k L_{ck}.
+\]
+
+We should also flag whether:
+\begin{itemize}
+    \item the preferred model changes across priors;
+    \item the three-level evidence category changes across priors;
+    \item all defensible priors lead to the same conclusion.
+\end{itemize}
+
+Important! The default Cauchy scale \(r=0.707\) is a defensible starting point for standardised \(t\)-test effects, but it is not a universal prior for every model family. We need a prior registry with one primary policy per family and at least a narrower and wider sensitivity prior. The prior registry should be frozen before the final corpus run, so we do not choose the prior after seeing which one gives the most attractive Bayes factor.
+
+
+
+\end{itemize}
+
+\subsection{Problems Encountered}
+
+\begin{itemize}
+    \item No problems to report
+\end{itemize}
+
+\subsection{Fixes Attempted}
+
+\begin{itemize}
+    \item No fixes to report
+\end{itemize}
+
+\subsection{What Was Learned}
+
+\begin{itemize}
+    \item Fundamentals of Bayesian analysis and theory 
+    \item How to write an OSF registration form 
+\end{itemize}
+
+\subsection{Next Steps}
+
+\begin{itemize}
+    \item Review and finalise OSF form
+    \item Specify better the graphs useful for analysis
+    \item Program the pipeline for the project 
+\end{itemize}
+\entryseparator
+
+
+\section{July 14th, 2026}
+
+\subsection{Work Completed}
+
+\begin{itemize}
+    \item Reviewed and revised the first draft of OSF Prereg form.
+\end{itemize}
+
+\subsection{Technical and Statistical Decisions}
+
+\begin{itemize}
+    \item
+
 \end{itemize}
 
 \subsection{Problems Encountered}
 
 \begin{itemize}
     \item 
-    \item 
-    \item 
 \end{itemize}
 
 \subsection{Fixes Attempted}
 
 \begin{itemize}
-    \item 
-    \item 
-    \item 
+    \item
 \end{itemize}
 
 \subsection{What Was Learned}
 
 \begin{itemize}
-    \item Mann-Whitney U test $\rightarrow$ comparing ranks regardless of variance assumptions and normality assumptions; Maybe a good choice in some cases, awaiting for more exploration in future studies.
-    \item 
     \item 
 \end{itemize}
 
@@ -193,45 +487,36 @@
 \entryseparator
 
 
-\section{July 10th, 2026}
+\section{July 15th, 2026}
 
 \subsection{Work Completed}
 
 \begin{itemize}
-    \item 
-    \item 
-    \item 
+    \item
 \end{itemize}
 
 \subsection{Technical and Statistical Decisions}
 
 \begin{itemize}
-    \item 
-    \item 
-    \item 
+    \item
+
 \end{itemize}
 
 \subsection{Problems Encountered}
 
 \begin{itemize}
     \item 
-    \item 
-    \item 
 \end{itemize}
 
 \subsection{Fixes Attempted}
 
 \begin{itemize}
-    \item 
-    \item 
-    \item 
+    \item
 \end{itemize}
 
 \subsection{What Was Learned}
 
 \begin{itemize}
-    \item 
-    \item 
     \item 
 \end{itemize}
 
@@ -243,3 +528,6 @@
 \entryseparator
 
 \end{document}
+
+
+
