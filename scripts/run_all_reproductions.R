@@ -1,0 +1,29 @@
+# scripts/run_all_reproductions.R
+# Runs every study-specific reproduction script, then compiles the results.
+# Scripts are discovered dynamically (glob on R/reproduce/study_*.R) instead
+# of a hand-maintained list, so adding a new study script is picked up
+# automatically instead of silently being left out of "run everything".
+
+source("R/reproduce/00_reproduction_helpers.R")
+
+study_scripts <- sort(list.files(
+  path = "R/reproduce", pattern = "^study_[0-9]+\\.R$", full.names = TRUE
+))
+message("Found ", length(study_scripts), " study reproduction scripts.")
+
+for (script in study_scripts) source(script)
+
+reproduce_fns <- sort(ls(pattern = "^reproduce_study_[0-9]+$", envir = .GlobalEnv))
+if (length(reproduce_fns) != length(study_scripts)) {
+  warning(
+    length(study_scripts), " scripts sourced but only ", length(reproduce_fns),
+    " reproduce_study_*() functions found -- check for naming mismatches."
+  )
+}
+
+for (fn_name in reproduce_fns) {
+  message("Running ", fn_name, "()...")
+  get(fn_name)()
+}
+
+source("R/reproduce/98_compile_recomputed_results.R")

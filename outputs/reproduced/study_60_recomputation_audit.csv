@@ -1,0 +1,5 @@
+analysis,f_value,df1,df2,p_value,eta_p2,mean_control,mean_safety,interpretation
+field_exact_rule_winsorized_article,5.169119765850352,1,322,0.023649952936705677,0.015799534410673624,3.4723926380368098,3.593047034764826,Correct main reproduction; matches the published F = 5.17 after exact nearest-observed winsorization.
+field_unwinsorized_spss_screenshot,5.320573648227904,1,322,0.02170950299881814,0.0162549319430985,3.470347648261759,3.5937286980231766,Matches the supplied SPSS screenshot F = 5.321 and its displayed descriptive statistics.
+field_author_saved_rounded_winsorized,5.320573648227904,1,322,0.02170950299881814,0.0162549319430985,3.470347648261759,3.5937286980231766,Uses rounded saved values 2.33 and 4.89; still rounds to F = 5.17 but is not the exact preprocessing rule.
+inclusive_author_saved_processed,42.951850798082866,1,322,2.226600531112176e-10,0.11769182894717489,77.65644171779142,90.4478527607362,Matches both the published article and supplied SPSS screenshot F = 42.952.
