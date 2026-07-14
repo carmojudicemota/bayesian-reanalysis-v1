@@ -11,9 +11,6 @@ compute_wave1_bayes_factors <- function(
   claims <- read_csv(claims_path, show_col_types = FALSE)
   priors <- read_csv(priors_path, show_col_types = FALSE)
 
-  # NOTE: build_claims_draft() renames verified_results_draft.csv's stat_test
-  # column to frequentist_test in the final claims table -- filter/mutate
-  # against that name, not "stat_test".
   wave1 <- claims |>
     filter(status == "ready") |>
     filter(frequentist_test %in% c(
@@ -23,8 +20,6 @@ compute_wave1_bayes_factors <- function(
     )) |>
     mutate(
       bf_family = if_else(frequentist_test == "pearson_correlation", "correlation", "t_test"),
-      # study_22 is repeated_measures_anova with numerator df = 1, algebraically
-      # a paired t-test (F = t^2). Treat it as paired for the BF step only.
       t_for_bf = if_else(
         frequentist_test == "repeated_measures_anova" & is.na(t_value) & !is.na(f_value),
         sqrt(f_value), t_value
@@ -45,10 +40,6 @@ compute_wave1_bayes_factors <- function(
   }
 
   bf_for_r_row <- function(r_val, n_val, rscale) {
-    # Exact-correlation construction: build two vectors of length n with
-    # sample correlation exactly r via Gram-Schmidt, then hand raw vectors to
-    # correlationBF() since it requires x, y (not summary stats). The BF
-    # depends only on the sufficient statistic (r, n), so this is exact.
     x <- rnorm(n_val); x <- (x - mean(x)) / sd(x)
     z <- rnorm(n_val); z <- (z - mean(z)) / sd(z)
     z_orth <- residuals(lm(z ~ x)); z_orth <- (z_orth - mean(z_orth)) / sd(z_orth)
@@ -70,11 +61,11 @@ compute_wave1_bayes_factors <- function(
       tibble(
         claim_id = row$claim_id,
         study_id = row$study_id,
-        stat_test = row$frequentist_test,   # renamed back for downstream consistency
+        stat_test = row$frequentist_test,   
         bf_family = row$bf_family,
         prior_label = p$prior_label,
         rscale = p$rscale,
-        p_value = row$p_value,   # already resolved to match `direction` upstream
+        p_value = row$p_value,  
         bf10 = bf10
       )
     })

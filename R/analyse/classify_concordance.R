@@ -29,8 +29,6 @@ classify_concordance <- function(
       y_c = log10(bf10)
     )
 
-  # Prior sensitivity span: range of log10(BF10) across narrow/primary/wide
-  # for each claim, per the diary's continuous-evidence-plane definition.
   span <- bf |>
     group_by(claim_id) |>
     summarise(prior_sensitivity_span = max(log10(bf10)) - min(log10(bf10)), .groups = "drop")
