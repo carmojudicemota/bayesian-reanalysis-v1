@@ -1,0 +1,7 @@
+concordance_cell,claim_count,claim_proportion,study_weighted_proportion,studies_with_cell
+Significant + H1,13,0.8125,0.8,8
+Significant + inconclusive,0,0,0,0
+Significant + H0,0,0,0,0
+Nonsignificant + H0,1,0.0625,0.05,1
+Nonsignificant + inconclusive,2,0.125,0.15,2
+Nonsignificant + H1,0,0,0,0

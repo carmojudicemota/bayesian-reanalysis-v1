@@ -1,63 +1,277 @@
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(forcats)
 
-classify_concordance <- function(
-    bf_path = "outputs/tables/bayes_factor_results.csv",
-    alpha = 0.05,
-    k = 3,
-    output_table_path = "outputs/tables/concordance_claim_level.csv",
-    output_plot_path = "outputs/figures/evidence_plane.png"
-) {
-  bf <- read_csv(bf_path, show_col_types = FALSE)
+p_band_levels <- c("p >= .05", ".01 <= p < .05", ".001 <= p < .01", "p < .001")
 
-  primary <- bf |>
-    filter(prior_label == "primary") |>
+bf_strength_levels <- c(
+  "Decisive/extreme support for H0", "Very strong support for H0", "Strong support for H0",
+  "Substantial/moderate support for H0", "Weak/anecdotal support for H0", "Equal support",
+  "Weak/anecdotal support for H1", "Substantial/moderate support for H1", "Strong support for H1",
+  "Very strong support for H1", "Decisive/extreme support for H1"
+)
+
+concordance_cell_levels <- c(
+  "Significant + H1", "Significant + inconclusive", "Significant + H0",
+  "Nonsignificant + H0", "Nonsignificant + inconclusive", "Nonsignificant + H1"
+)
+
+classify_p_band <- function(p) {
+  result <- case_when(
+    is.na(p) ~ NA_character_, p < .001 ~ "p < .001", p < .01 ~ ".001 <= p < .01",
+    p < .05 ~ ".01 <= p < .05", TRUE ~ "p >= .05"
+  )
+  factor(result, levels = p_band_levels, ordered = TRUE)
+}
+
+classify_frequentist_result <- function(p, alpha = .05) {
+  result <- case_when(is.na(p) ~ NA_character_, p < alpha ~ "Significant", TRUE ~ "Nonsignificant")
+  factor(result, levels = c("Nonsignificant", "Significant"))
+}
+
+classify_bf_conclusion <- function(bf10, k = 3) {
+  result <- case_when(is.na(bf10) ~ NA_character_, bf10 >= k ~ "H1", bf10 <= 1 / k ~ "H0", TRUE ~ "Inconclusive")
+  factor(result, levels = c("H0", "Inconclusive", "H1"))
+}
+
+classify_bf_strength <- function(bf10) {
+  result <- case_when(
+    is.na(bf10) ~ NA_character_,
+    bf10 < 1 / 100 ~ "Decisive/extreme support for H0",
+    bf10 < 1 / 30 ~ "Very strong support for H0",
+    bf10 < 1 / 10 ~ "Strong support for H0",
+    bf10 <= 1 / 3 ~ "Substantial/moderate support for H0",
+    bf10 < 1 ~ "Weak/anecdotal support for H0",
+    bf10 == 1 ~ "Equal support",
+    bf10 < 3 ~ "Weak/anecdotal support for H1",
+    bf10 < 10 ~ "Substantial/moderate support for H1",
+    bf10 < 30 ~ "Strong support for H1",
+    bf10 < 100 ~ "Very strong support for H1",
+    TRUE ~ "Decisive/extreme support for H1"
+  )
+  factor(result, levels = bf_strength_levels, ordered = TRUE)
+}
+
+classify_favoured_side <- function(bf10) {
+  case_when(is.na(bf10) ~ NA_character_, bf10 > 1 ~ "H1", bf10 < 1 ~ "H0", TRUE ~ "Equal")
+}
+
+classify_concordance_cell <- function(frequentist_result, bf_conclusion) {
+  result <- case_when(
+    frequentist_result == "Significant" & bf_conclusion == "H1" ~ "Significant + H1",
+    frequentist_result == "Significant" & bf_conclusion == "Inconclusive" ~ "Significant + inconclusive",
+    frequentist_result == "Significant" & bf_conclusion == "H0" ~ "Significant + H0",
+    frequentist_result == "Nonsignificant" & bf_conclusion == "H0" ~ "Nonsignificant + H0",
+    frequentist_result == "Nonsignificant" & bf_conclusion == "Inconclusive" ~ "Nonsignificant + inconclusive",
+    frequentist_result == "Nonsignificant" & bf_conclusion == "H1" ~ "Nonsignificant + H1",
+    TRUE ~ NA_character_
+  )
+  factor(result, levels = concordance_cell_levels)
+}
+
+classify_concordance_status <- function(cell) {
+  result <- case_when(
+    cell %in% c("Significant + H1", "Nonsignificant + H0") ~ "Concordant",
+    cell %in% c("Significant + inconclusive", "Nonsignificant + inconclusive") ~ "Inconclusive",
+    cell %in% c("Significant + H0", "Nonsignificant + H1") ~ "Discordant",
+    TRUE ~ NA_character_
+  )
+  factor(result, levels = c("Concordant", "Inconclusive", "Discordant"))
+}
+
+add_evidence_classifications <- function(results, alpha, k) {
+  results |>
     mutate(
-      sig_freq = p_value < alpha,
-      bf_band = case_when(
-        bf10 > k     ~ "supports_H1",
-        bf10 < 1 / k ~ "supports_H0",
-        TRUE         ~ "inconclusive"
-      ),
-      cell = paste0(
-        if_else(sig_freq, "p<alpha", "p>=alpha"), " x ", bf_band
-      ),
-      concordant = (sig_freq & bf_band == "supports_H1") |
-                   (!sig_freq & bf_band == "supports_H0"),
-      x_c = -log10(p_value),
-      y_c = log10(bf10)
+      p_band = classify_p_band(p_value),
+      frequentist_result = classify_frequentist_result(p_value, alpha = alpha),
+      bf_conclusion = classify_bf_conclusion(bf10, k = k),
+      bf_strength = classify_bf_strength(bf10),
+      favoured_side = classify_favoured_side(bf10),
+      concordance_cell = classify_concordance_cell(frequentist_result, bf_conclusion),
+      concordance_status = classify_concordance_status(concordance_cell),
+      negative_log10_p = -log10(p_value),
+      log10_bf10 = log10(bf10)
     )
+}
 
-  span <- bf |>
-    group_by(claim_id) |>
-    summarise(prior_sensitivity_span = max(log10(bf10)) - min(log10(bf10)), .groups = "drop")
+summarise_prior_sensitivity <- function(results) {
+  results |>
+    group_by(claim_id, study_id) |>
+    summarise(
+      n_prior_specifications = n(),
+      prior_labels = paste(sort(unique(prior_label)), collapse = "; "),
+      minimum_bf10 = min(bf10),
+      maximum_bf10 = max(bf10),
+      minimum_log10_bf10 = min(log10_bf10),
+      maximum_log10_bf10 = max(log10_bf10),
+      prior_sensitivity_span = maximum_log10_bf10 - minimum_log10_bf10,
+      bf_conclusion_changed = n_distinct(as.character(bf_conclusion)) > 1,
+      favoured_side_changed = n_distinct(favoured_side) > 1,
+      .groups = "drop"
+    )
+}
 
-  claim_level <- primary |>
-    left_join(span, by = "claim_id") |>
-    select(claim_id, study_id, stat_test, p_value, bf10, cell, bf_band,
-           concordant, x_c, y_c, prior_sensitivity_span)
+build_concordance_summary <- function(claim_level) {
+  total_claims <- nrow(claim_level)
+  
+  claim_counts <- claim_level |>
+    mutate(concordance_cell = as.character(concordance_cell)) |>
+    count(concordance_cell, name = "claim_count") |>
+    mutate(claim_proportion = claim_count / total_claims)
+  
+  study_ids <- sort(unique(claim_level$study_id))
+  
+  complete_grid <- expand.grid(
+    study_id = study_ids, concordance_cell = concordance_cell_levels, stringsAsFactors = FALSE
+  ) |> as_tibble()
+  
+  study_cell_counts <- claim_level |>
+    mutate(concordance_cell = as.character(concordance_cell)) |>
+    count(study_id, concordance_cell, name = "claims_in_cell")
+  
+  study_totals <- claim_level |> count(study_id, name = "claims_in_study")
+  
+  study_weighted <- complete_grid |>
+    left_join(study_cell_counts, by = c("study_id", "concordance_cell")) |>
+    mutate(claims_in_cell = coalesce(claims_in_cell, 0L)) |>
+    left_join(study_totals, by = "study_id") |>
+    mutate(within_study_proportion = claims_in_cell / claims_in_study) |>
+    group_by(concordance_cell) |>
+    summarise(
+      study_weighted_proportion = mean(within_study_proportion),
+      studies_with_cell = sum(claims_in_cell > 0),
+      .groups = "drop"
+    )
+  
+  tibble(concordance_cell = concordance_cell_levels) |>
+    left_join(claim_counts, by = "concordance_cell") |>
+    left_join(study_weighted, by = "concordance_cell") |>
+    mutate(
+      claim_count = coalesce(claim_count, 0L),
+      claim_proportion = coalesce(claim_proportion, 0),
+      study_weighted_proportion = coalesce(study_weighted_proportion, 0),
+      studies_with_cell = coalesce(studies_with_cell, 0L),
+      concordance_cell = factor(concordance_cell, levels = concordance_cell_levels)
+    ) |>
+    arrange(concordance_cell)
+}
 
-  dir.create(dirname(output_table_path), recursive = TRUE, showWarnings = FALSE)
-  write_csv(claim_level, output_table_path)
-
-  ref_x <- -log10(alpha)
-  ref_y <- log10(k)
-
-  plot <- ggplot(claim_level, aes(x = x_c, y = y_c, colour = cell)) +
-    geom_point(size = 2.5, alpha = 0.85) +
-    geom_hline(yintercept = c(-ref_y, ref_y), linetype = "dashed", colour = "grey40") +
-    geom_vline(xintercept = ref_x, linetype = "dashed", colour = "grey40") +
+plot_evidence_plane <- function(claim_level, alpha, k, output_path) {
+  p_threshold <- -log10(alpha)
+  bf_threshold <- log10(k)
+  
+  plot <- ggplot(claim_level, aes(x = negative_log10_p, y = log10_bf10, colour = concordance_cell)) +
+    geom_hline(yintercept = c(-bf_threshold, bf_threshold), linetype = "dashed") +
+    geom_vline(xintercept = p_threshold, linetype = "dashed") +
+    geom_hline(yintercept = 0, linewidth = 0.3) +
+    geom_point(size = 2.7, alpha = 0.85) +
     labs(
-      x = expression(-log[10](p)),
-      y = expression(log[10](BF[10])),
-      colour = "Cell",
-      title = "Continuous evidence-concordance plane (primary prior)"
+      x = expression(-log[10](p)), y = expression(log[10](BF[10])), colour = "Concordance cell",
+      title = "Frequentist-Bayesian evidence plane",
+      subtitle = paste0(
+        "Primary prior; alpha = ", alpha, "; H1 threshold BF10 >= ", k,
+        "; H0 threshold BF10 <= ", round(1 / k, 3)
+      )
     ) +
-    theme_minimal()
+    theme_minimal(base_size = 12)
+  
+  dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
+  ggsave(filename = output_path, plot = plot, width = 8, height = 5.5, dpi = 300)
+  invisible(plot)
+}
 
-  dir.create(dirname(output_plot_path), recursive = TRUE, showWarnings = FALSE)
-  ggsave(output_plot_path, plot, width = 7, height = 5, dpi = 300)
+build_detailed_rank_table <- function(claim_level) {
+  claim_level |>
+    select(
+      claim_id, study_id, stat_test, p_value, p_band, frequentist_result, bf10, bf_strength,
+      favoured_side, concordance_cell, concordance_status, negative_log10_p, log10_bf10,
+      prior_sensitivity_span
+    ) |>
+    arrange(desc(log10_bf10))
+}
 
-  invisible(claim_level)
+plot_detailed_rank <- function(detailed_rank, output_path) {
+  bf_gridlines <- log10(c(100, 30, 10, 3, 1, 1 / 3, 1 / 10, 1 / 30, 1 / 100))
+  df <- detailed_rank |> mutate(claim_id = fct_reorder(claim_id, log10_bf10))
+  
+  p <- ggplot(df, aes(x = log10_bf10, y = claim_id)) +
+    geom_vline(xintercept = bf_gridlines, colour = "grey85", linewidth = 0.3) +
+    geom_vline(xintercept = 0, colour = "black", linewidth = 0.4) +
+    geom_point(aes(colour = concordance_status), size = 3) +
+    geom_text(aes(label = p_band), hjust = -0.15, size = 2.6, colour = "grey30") +
+    scale_colour_manual(values = c("Concordant" = "#2b8a3e", "Inconclusive" = "#868e96", "Discordant" = "#e03131")) +
+    labs(
+      x = expression(log[10](BF[10]) ~ "(primary prior)"), y = NULL, colour = "Concordance status",
+      title = "Detailed evidence rank",
+      subtitle = paste0(
+        "Claims ranked by Bayes-factor strength (Jeffreys 1961 categories); ",
+        "label shows the p-value band (Wasserman 2004); colour shows six-cell concordance status"
+      )
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(panel.grid = element_blank())
+  
+  dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
+  ggsave(filename = output_path, plot = p, width = 9, height = max(4, 0.35 * nrow(df) + 1.5), dpi = 300)
+  invisible(p)
+}
+
+build_concordance_outputs <- function(
+    results_path = "outputs/tables/bayes_factor_results.csv",
+    alpha = .05,
+    k = 3,
+    claim_output_path = "outputs/tables/concordance_claim_level.csv",
+    summary_output_path = "outputs/tables/concordance_summary.csv",
+    figure_output_path = "outputs/figures/evidence_concordance_plane.png",
+    detailed_rank_figure_path = "outputs/figures/detailed_evidence_rank.png",
+    remove_legacy_outputs = TRUE
+) {
+  if (remove_legacy_outputs) {
+    legacy_paths <- c(
+      "outputs/tables/agreement_rank.csv", "outputs/figures/agreement_rank.png",
+      "outputs/figures/evidence_plane.png", "outputs/tables/prior_sensitivity.csv",
+      "outputs/tables/detailed_evidence_rank.csv"
+    )
+    unlink(legacy_paths[file.exists(legacy_paths)])
+  }
+  
+  results <- read_csv(results_path, show_col_types = FALSE)
+  classified <- add_evidence_classifications(results = results, alpha = alpha, k = k)
+  prior_sensitivity <- summarise_prior_sensitivity(classified)
+  
+  claim_level <- classified |>
+    filter(prior_label == "primary") |>
+    left_join(prior_sensitivity, by = c("claim_id", "study_id")) |>
+    select(
+      claim_id, study_id, stat_test, p_value, p_band, frequentist_result, bf10, bf_conclusion,
+      bf_strength, favoured_side, concordance_cell, concordance_status, negative_log10_p, log10_bf10,
+      n_prior_specifications, minimum_bf10, maximum_bf10, prior_sensitivity_span,
+      bf_conclusion_changed, favoured_side_changed
+    ) |>
+    arrange(study_id, claim_id)
+  
+  concordance_summary <- build_concordance_summary(claim_level)
+  detailed_rank <- build_detailed_rank_table(claim_level)
+  
+  dir.create(dirname(claim_output_path), recursive = TRUE, showWarnings = FALSE)
+  write_csv(claim_level, claim_output_path, na = "")
+  write_csv(concordance_summary, summary_output_path, na = "")
+  
+  plot_evidence_plane(claim_level = claim_level, alpha = alpha, k = k, output_path = figure_output_path)
+  plot_detailed_rank(detailed_rank = detailed_rank, output_path = detailed_rank_figure_path)
+  
+  message(
+    "Created concordance outputs for ", nrow(claim_level), " claims from ",
+    n_distinct(claim_level$study_id), " studies."
+  )
+  
+  invisible(list(
+    claim_level = claim_level, summary = concordance_summary,
+    prior_sensitivity = prior_sensitivity, detailed_rank = detailed_rank
+  ))
+}
+
+if (sys.nframe() == 0L) {
+  build_concordance_outputs()
 }
