@@ -1,8 +1,3 @@
-# scripts/run_all_reproductions.R
-# Runs every study-specific reproduction script, then compiles the results.
-# Scripts are discovered dynamically (glob on R/reproduce/study_*.R) instead
-# of a hand-maintained list, so adding a new study script is picked up
-# automatically instead of silently being left out of "run everything".
 
 source("R/reproduce/00_reproduction_helpers.R")
 
