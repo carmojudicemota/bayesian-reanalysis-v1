@@ -1,0 +1,5 @@
+source("R/analyse/compute_wave1_bayes_factors.R") 
+source("R/analyse/classify_concordance.R")
+compute_wave1_bayes_factors() 
+build_concordance_outputs()
+message("Analysis done")
