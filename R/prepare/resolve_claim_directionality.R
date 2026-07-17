@@ -1,18 +1,3 @@
-# R/prepare/resolve_claim_directionality.R
-#
-# The reproduction layer (R/reproduce/*.R) stores whatever p-value/sidedness
-# matches what the source article reported -- that's correct, it's a fidelity
-# record, not an analysis decision. Bayesian reanalysis, though, must test the
-# direction actually supported by the study's own pre-specified hypothesis
-# (checked against Phase 1's "Claim trace: Hypothesis" column), which can
-# differ from the article's own reporting choice.
-#
-# This is a general rule, not a per-claim patch: whenever a claim's resolved
-# `direction` is "two_sided" but its source result was recomputed as
-# "one_sided", recompute the exact two-sided p from the same t-statistic
-# (2 * pt(-abs(t), df) is mathematically exact, not an approximation) rather
-# than silently reusing the one-sided p in a two-sided analysis.
-
 resolve_claim_directionality <- function(
     claims_path = "data/derived/claims_draft.csv",
     output_path = "data/derived/claims_draft.csv"
