@@ -42,29 +42,29 @@ reproduce_study_27_pair <- function(dat, pre, post, analysis_id, outcome,
                                     reported_t, reported_d) {
   pre  <- find_var_27(dat, pre)
   post <- find_var_27(dat, post)
-  
+
   x_pre  <- suppressWarnings(as.numeric(dat[[pre]]))
   x_post <- suppressWarnings(as.numeric(dat[[post]]))
   keep   <- stats::complete.cases(x_pre, x_post)
   pre_c  <- x_pre[keep]; post_c <- x_post[keep]; d <- post_c - pre_c
-  
+
   n <- length(d)
   if (n < 2L) stop("Fewer than two complete pairs for outcome: ", outcome, call. = FALSE)
-  
+
   test <- stats::t.test(post_c, pre_c, paired = TRUE, alternative = "two.sided")
   t_value  <- unname(test$statistic)
   df_value <- unname(test$parameter)
   p_value  <- unname(test$p.value)
-  
+
   sd_pre  <- stats::sd(pre_c)
   sd_post <- stats::sd(post_c)
   sd_diff <- stats::sd(d)
-  
+
   # Manuscript effect size: average-SD standardizer (reproduces Table 1).
   cohen_d_average_sd <- mean(d) / ((sd_pre + sd_post) / 2)
   # SPSS default paired d for reference (standardized by SD of differences).
   spss_cohen_dz <- mean(d) / sd_diff
-  
+
   tibble::tibble(
     study_id = "study_27",
     analysis_id = analysis_id,
@@ -113,16 +113,43 @@ reproduce_study_27 <- function(path) {
   dplyr::bind_rows(result_1, result_2)
 }
 
+# ---- write generic-schema recomputed CSV (98_compile-ready) + native audit ----
 write_study_27_outputs <- function(results, output_path, audit_path) {
   dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
   dir.create(dirname(audit_path), recursive = TRUE, showWarnings = FALSE)
-  readr::write_csv(results, output_path, na = "")
-  audit <- results |>
-    dplyr::select(study_id, analysis_id, outcome, n_total, n_complete, n_missing_pair,
-                  df, pre_mean, pre_sd, post_mean, post_sd, mean_difference,
-                  sd_difference, t_value, p_value, effect_size_type, effect_size_value,
-                  spss_cohen_dz, reported_t, reported_d, matches_reported_t,
-                  matches_reported_d, notes)
-  readr::write_csv(audit, audit_path, na = "")
+
+  meta <- list(
+    study_27_result_1 = list(id = 46L,
+      reported_result = "t(38) = 25.32, p < .001, d = 5.65",
+      raw_variable_names = "Q3_4pre; Q3_4"),
+    study_27_result_2 = list(id = 47L,
+      reported_result = "t(38) = 9.03, p < .001, d = 1.80",
+      raw_variable_names = "Q3_9pre; Q3_9")
+  )
+
+  generic <- do.call(rbind, lapply(seq_len(nrow(results)), function(i) {
+    r <- results[i, , drop = FALSE]
+    m <- meta[[r$analysis_id]]
+    data.frame(
+      id = m$id, study_id = "study_27", study_DOI = "10.1177/00986283211065746",
+      recomputation_status = r$recomputation_status, stat_test = "paired_t_test",
+      reported_result = m$reported_result,
+      p_value = r$p_value, p_operator = r$p_operator, p_sidedness = "two_sided",
+      t_value = r$t_value, t_df = r$df,
+      f_value = NA_real_, f_df1 = NA_real_, f_df2 = NA_real_,
+      z_value = NA_real_, chi2_value = NA_real_, chi2_df = NA_real_, r_value = NA_real_,
+      n1 = NA_real_, n2 = NA_real_, n_total = r$n_complete, n_eff = NA_real_,
+      effect_size_type = "cohen_d_average_sd", effect_size_value = r$effect_size_value,
+      estimate = r$mean_difference, se_estimate = r$mean_difference / r$t_value,
+      raw_data_file = "data/raw/study_27/ClassExerciseData.sav",
+      raw_variable_names = m$raw_variable_names,
+      model_formula = "paired t-test: post - pre; average-SD Cohen's d",
+      contrast_direction = "post minus pre",
+      extraction_note = r$notes, stringsAsFactors = FALSE
+    )
+  }))
+
+  readr::write_csv(generic, output_path, na = "")
+  readr::write_csv(results, audit_path, na = "")
   invisible(results)
 }

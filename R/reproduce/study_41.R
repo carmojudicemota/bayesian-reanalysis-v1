@@ -204,40 +204,46 @@ reproduce_study_41 <- function(path) {
 #' @param audit_path Audit CSV path.
 #'
 #' @return Invisibly returns the results.
-write_study_41_outputs <- function(results,
-                                   output_path,
-                                   audit_path) {
+
+# ---- write generic-schema recomputed CSV (98_compile-ready) + native audit ----
+# reproduce_study_41() still returns the detailed native tibble (used by the test);
+# the main recomputed CSV is now the generic schema every other study uses.
+write_study_41_outputs <- function(results, output_path, audit_path) {
   dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
   dir.create(dirname(audit_path), recursive = TRUE, showWarnings = FALSE)
 
-  readr::write_csv(results, output_path, na = "")
+  meta <- list(
+    study_41_result_1 = list(id = 28L,
+      reported_result = "t(36) = 8.53, p < .001, d = 1.56",
+      raw_variable_names = "PRE_Analyze; POST_Analyze"),
+    study_41_result_2 = list(id = 29L,
+      reported_result = "t(36) = 6.15, p < .001, d = 1.14",
+      raw_variable_names = "PRE_Intr data; POST_Intr data")
+  )
 
-  audit <- results |>
-    dplyr::select(
-      study_id,
-      analysis_id,
-      outcome,
-      n_total,
-      n_complete,
-      n_missing_pair,
-      df,
-      pre_mean,
-      pre_sd,
-      post_mean,
-      post_sd,
-      mean_difference,
-      sd_difference,
-      t_value,
-      p_value,
-      effect_size_type,
-      effect_size_value,
-      reported_t,
-      reported_d,
-      matches_reported_t,
-      matches_reported_d,
-      notes
+  generic <- do.call(rbind, lapply(seq_len(nrow(results)), function(i) {
+    r <- results[i, , drop = FALSE]
+    m <- meta[[r$analysis_id]]
+    data.frame(
+      id = m$id, study_id = "study_41", study_DOI = "10.1177/00986283251313760",
+      recomputation_status = "recomputed_from_raw_data", stat_test = "paired_t_test",
+      reported_result = m$reported_result,
+      p_value = r$p_value, p_operator = r$p_operator, p_sidedness = "two_sided",
+      t_value = r$t_value, t_df = r$df,
+      f_value = NA_real_, f_df1 = NA_real_, f_df2 = NA_real_,
+      z_value = NA_real_, chi2_value = NA_real_, chi2_df = NA_real_, r_value = NA_real_,
+      n1 = NA_real_, n2 = NA_real_, n_total = r$n_complete, n_eff = NA_real_,
+      effect_size_type = "cohens_dz_paired", effect_size_value = r$effect_size_value,
+      estimate = r$mean_difference, se_estimate = r$sd_difference / sqrt(r$n_complete),
+      raw_data_file = "data/raw/study_41/BART_Content_Knowledge_Deidentified.xlsx",
+      raw_variable_names = m$raw_variable_names,
+      model_formula = "paired t-test: POST - PRE (pairwise-complete)",
+      contrast_direction = "post minus pre",
+      extraction_note = r$notes, stringsAsFactors = FALSE
     )
+  }))
 
-  readr::write_csv(audit, audit_path, na = "")
+  readr::write_csv(generic, output_path, na = "")   # generic schema -> 98_compile
+  readr::write_csv(results, audit_path, na = "")    # full native detail
   invisible(results)
 }

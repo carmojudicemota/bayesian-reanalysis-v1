@@ -1,5 +1,6 @@
 library(readr)
 library(dplyr)
+library(ggplot2)
 library(forcats)
 
 p_band_levels <- c("p >= .05", ".01 <= p < .05", ".001 <= p < .01", "p < .001")
@@ -72,12 +73,11 @@ classify_concordance_cell <- function(frequentist_result, bf_conclusion) {
 classify_concordance_status <- function(cell) {
   result <- case_when(
     cell %in% c("Significant + H1", "Nonsignificant + H0") ~ "Concordant",
-    cell == "Significant + inconclusive" ~ "Significant, weak evidence",
-    cell == "Nonsignificant + inconclusive" ~ "Nonsignificant, weak evidence",
+    cell %in% c("Significant + inconclusive", "Nonsignificant + inconclusive") ~ "Inconclusive",
     cell %in% c("Significant + H0", "Nonsignificant + H1") ~ "Discordant",
     TRUE ~ NA_character_
   )
-  factor(result, levels = c("Concordant", "Significant, weak evidence", "Nonsignificant, weak evidence", "Discordant"))
+  factor(result, levels = c("Concordant", "Inconclusive", "Discordant"))
 }
 
 add_evidence_classifications <- function(results, alpha, k) {
@@ -157,8 +157,65 @@ build_concordance_summary <- function(claim_level) {
     arrange(concordance_cell)
 }
 
+plot_evidence_plane <- function(claim_level, alpha, k, output_path) {
+  p_threshold <- -log10(alpha)
+  bf_threshold <- log10(k)
+  
+  plot <- ggplot(claim_level, aes(x = negative_log10_p, y = log10_bf10, colour = concordance_cell)) +
+    geom_hline(yintercept = c(-bf_threshold, bf_threshold), linetype = "dashed") +
+    geom_vline(xintercept = p_threshold, linetype = "dashed") +
+    geom_hline(yintercept = 0, linewidth = 0.3) +
+    geom_point(size = 2.7, alpha = 0.85) +
+    labs(
+      x = expression(-log[10](p)), y = expression(log[10](BF[10])), colour = "Concordance cell",
+      title = "Frequentist-Bayesian evidence plane",
+      subtitle = paste0(
+        "Primary prior; alpha = ", alpha, "; H1 threshold BF10 >= ", k,
+        "; H0 threshold BF10 <= ", round(1 / k, 3)
+      )
+    ) +
+    theme_minimal(base_size = 12)
+  
+  dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
+  ggsave(filename = output_path, plot = plot, width = 8, height = 5.5, dpi = 300)
+  invisible(plot)
+}
 
+build_detailed_rank_table <- function(claim_level) {
+  claim_level |>
+    select(
+      claim_id, study_id, stat_test, p_value, p_band, frequentist_result, bf10, bf_strength,
+      favoured_side, concordance_cell, concordance_status, negative_log10_p, log10_bf10,
+      prior_sensitivity_span
+    ) |>
+    arrange(desc(log10_bf10))
+}
 
+plot_detailed_rank <- function(detailed_rank, output_path) {
+  bf_gridlines <- log10(c(100, 30, 10, 3, 1, 1 / 3, 1 / 10, 1 / 30, 1 / 100))
+  df <- detailed_rank |> mutate(claim_id = fct_reorder(claim_id, log10_bf10))
+  
+  p <- ggplot(df, aes(x = log10_bf10, y = claim_id)) +
+    geom_vline(xintercept = bf_gridlines, colour = "grey85", linewidth = 0.3) +
+    geom_vline(xintercept = 0, colour = "black", linewidth = 0.4) +
+    geom_point(aes(colour = concordance_status), size = 3) +
+    geom_text(aes(label = p_band), hjust = -0.15, size = 2.6, colour = "grey30") +
+    scale_colour_manual(values = c("Concordant" = "#2b8a3e", "Inconclusive" = "#868e96", "Discordant" = "#e03131")) +
+    labs(
+      x = expression(log[10](BF[10]) ~ "(primary prior)"), y = NULL, colour = "Concordance status",
+      title = "Detailed evidence rank",
+      subtitle = paste0(
+        "Claims ranked by Bayes-factor strength (Jeffreys 1961 categories); ",
+        "label shows the p-value band (Wasserman 2004); colour shows six-cell concordance status"
+      )
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(panel.grid = element_blank())
+  
+  dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
+  ggsave(filename = output_path, plot = p, width = 9, height = max(4, 0.35 * nrow(df) + 1.5), dpi = 300)
+  invisible(p)
+}
 
 build_concordance_outputs <- function(
     results_path = "outputs/tables/bayes_factor_results.csv",
@@ -166,12 +223,14 @@ build_concordance_outputs <- function(
     k = 3,
     claim_output_path = "outputs/tables/concordance_claim_level.csv",
     summary_output_path = "outputs/tables/concordance_summary.csv",
+    figure_output_path = "outputs/figures/evidence_concordance_plane.png",
+    detailed_rank_figure_path = "outputs/figures/detailed_evidence_rank.png",
     remove_legacy_outputs = TRUE
 ) {
   if (remove_legacy_outputs) {
     legacy_paths <- c(
-      "outputs/tables/agreement_rank.csv", 
-      "outputs/tables/prior_sensitivity.csv",
+      "outputs/tables/agreement_rank.csv", "outputs/figures/agreement_rank.png",
+      "outputs/figures/evidence_plane.png", "outputs/tables/prior_sensitivity.csv",
       "outputs/tables/detailed_evidence_rank.csv"
     )
     unlink(legacy_paths[file.exists(legacy_paths)])
