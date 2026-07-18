@@ -37,7 +37,7 @@ recompute_study_05_independent_t <- function(dat, id, analysis_label, outcome,
 
   make_recomputed_row(
     id = id,
-    study_id = "study_5",
+    study_id = "study_05",
     study_DOI = "10.1037/stl0000136",
     recomputation_status = "recomputed_from_raw_data",
     stat_test = "independent_t_test",

@@ -37,8 +37,10 @@ fit_study_37_model <- function(d) {
               control = lme4::glmerControl(optimizer = "bobyqa"), nAGQ = 10)
 }
 
-reproduce_study_37 <- function(path) {
-  d   <- read_study_37_data(path)
+reproduce_study_37 <- function(
+    input_path = "data/raw/study_37/osf_data.csv",
+    output_path = "outputs/reproduced/study_37_recomputed.csv") {
+  d   <- read_study_37_data(input_path)
   fit <- fit_study_37_model(d)
   cf  <- as.data.frame(summary(fit)$coefficients)   # Estimate, Std. Error, z value, Pr(>|z|)
   names(cf) <- c("estimate", "se", "z", "p")
@@ -71,7 +73,9 @@ reproduce_study_37 <- function(path) {
         "model4_att fixed effect %s: log-odds = %.4f (SE = %.4f), z = %.3f, p = %.6f, OR = %.3f. n = %d in %d sections.",
         t$coef, r$estimate, r$se, r$z, r$p, exp(r$estimate), nrow(d), lme4::ngrps(fit)[["section"]]))
   })
-  dplyr::bind_rows(rows)
+  results <- dplyr::bind_rows(rows)
+  write_study_37_outputs(results, output_path)
+  invisible(results)
 }
 
 write_study_37_outputs <- function(results, output_path) {

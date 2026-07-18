@@ -85,8 +85,10 @@ reproduce_study_29_effect <- function(dat, dv, id, reported_result, reported_d, 
       if (matches_d) "Reproduces." else "F and 95% CI reproduce; d off by ~0.04."))
 }
 
-reproduce_study_29 <- function(path) {
-  dat <- read_study_29_data(path)
+reproduce_study_29 <- function(
+    input_path = "data/raw/study_29/Morling and Lee Faculty Sample Open Data.csv",
+    output_path = "outputs/reproduced/study_29_recomputed.csv") {
+  dat <- read_study_29_data(input_path)
   result_1 <- reproduce_study_29_effect(
     dat, dv = "univtenure", id = 48L,
     reported_result = "F(1, 432) = 232.57, p < .001, d = 1.50, 95% CI [1.25, 1.67]",
@@ -97,7 +99,9 @@ reproduce_study_29 <- function(path) {
     reported_result = "F(1, 429) = 14.19, p < .001, d = 0.36, 95% CI [0.17, 0.55]",
     reported_d = 0.36,
     contrast = "Associate Professor (Title=2) minus Associate Teaching Professor (Title=1)")
-  dplyr::bind_rows(result_1, result_2)
+  results <- dplyr::bind_rows(result_1, result_2)
+  write_study_29_outputs(results, output_path)
+  invisible(results)
 }
 
 write_study_29_outputs <- function(results, output_path) {

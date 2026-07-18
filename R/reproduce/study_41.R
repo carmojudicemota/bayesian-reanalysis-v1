@@ -171,8 +171,11 @@ reproduce_study_41_pair <- function(dat,
 #' @param path Path to BART Content Knowledge_Deidentified.xlsx.
 #'
 #' @return A two-row tibble.
-reproduce_study_41 <- function(path) {
-  dat <- read_study_41_data(path)
+reproduce_study_41 <- function(
+    input_path = "data/raw/study_41/BART_Content_Knowledge_Deidentified.xlsx",
+    output_path = "outputs/reproduced/study_41_recomputed.csv",
+    audit_path = "outputs/reproduced/study_41_recomputation_audit.csv") {
+  dat <- read_study_41_data(input_path)
 
   result_1 <- reproduce_study_41_pair(
     dat = dat,
@@ -194,7 +197,9 @@ reproduce_study_41 <- function(path) {
     reported_d = 1.14
   )
 
-  dplyr::bind_rows(result_1, result_2)
+  results <- dplyr::bind_rows(result_1, result_2)
+  write_study_41_outputs(results, output_path, audit_path)
+  invisible(results)
 }
 
 #' Write Study 41 reproduction and audit outputs
@@ -204,46 +209,74 @@ reproduce_study_41 <- function(path) {
 #' @param audit_path Audit CSV path.
 #'
 #' @return Invisibly returns the results.
+#' Map the native Study 41 results to the generic recomputed schema used by
+#' 98_compile_recomputed_results.R (integer id + standard columns).
+#'
+#' @param results Output from reproduce_study_41().
+#' @return A tibble in the shared recomputed schema.
+build_study_41_generic <- function(results) {
+  reported <- c(
+    study_41_result_1 = "t(36) = 8.53, p < .001, d = 1.56",
+    study_41_result_2 = "t(36) = 6.15, p < .001, d = 1.14"
+  )
+  ids <- c(study_41_result_1 = 28L, study_41_result_2 = 29L)
+  vnames <- c(
+    study_41_result_1 = "PRE_Analyze, POST_Analyze",
+    study_41_result_2 = "PRE_Intr data, POST_Intr data"
+  )
+  formula <- c(
+    study_41_result_1 = "paired t-test: POST_Analyze - PRE_Analyze",
+    study_41_result_2 = "paired t-test: POST_Intrdata - PRE_Intrdata"
+  )
 
-# ---- write generic-schema recomputed CSV (98_compile-ready) + native audit ----
-# reproduce_study_41() still returns the detailed native tibble (used by the test);
-# the main recomputed CSV is now the generic schema every other study uses.
-write_study_41_outputs <- function(results, output_path, audit_path) {
+  results |>
+    dplyr::transmute(
+      id                   = unname(ids[analysis_id]),
+      study_id             = "study_41",
+      study_DOI            = "10.1177/00986283251313760",
+      recomputation_status = recomputation_status,
+      stat_test            = stat_test,
+      reported_result      = unname(reported[analysis_id]),
+      p_value              = p_value,
+      p_operator           = "=",
+      p_sidedness          = "two_sided",
+      t_value              = t_value,
+      t_df                 = df,
+      f_value = NA_real_, f_df1 = NA_real_, f_df2 = NA_real_,
+      z_value = NA_real_, chi2_value = NA_real_, chi2_df = NA_real_,
+      r_value = NA_real_, n1 = NA_real_, n2 = NA_real_,
+      n_total              = n_complete,
+      n_eff                = NA_real_,
+      effect_size_type     = "cohens_dz_paired",
+      effect_size_value    = effect_size_value,
+      estimate             = mean_difference,
+      se_estimate          = sd_difference / sqrt(n_complete),
+      raw_data_file        = "data/raw/study_41/BART Content Knowledge_Deidentified.xlsx",
+      raw_variable_names   = unname(vnames[analysis_id]),
+      model_formula        = unname(formula[analysis_id]),
+      contrast_direction   = "post minus pre",
+      extraction_note      = notes
+    )
+}
+
+write_study_41_outputs <- function(results,
+                                   output_path,
+                                   audit_path) {
   dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
   dir.create(dirname(audit_path), recursive = TRUE, showWarnings = FALSE)
 
-  meta <- list(
-    study_41_result_1 = list(id = 28L,
-      reported_result = "t(36) = 8.53, p < .001, d = 1.56",
-      raw_variable_names = "PRE_Analyze; POST_Analyze"),
-    study_41_result_2 = list(id = 29L,
-      reported_result = "t(36) = 6.15, p < .001, d = 1.14",
-      raw_variable_names = "PRE_Intr data; POST_Intr data")
-  )
+  # Main recomputed CSV: shared generic schema consumed by 98_compile.
+  generic <- build_study_41_generic(results)
+  readr::write_csv(generic, output_path, na = "")
 
-  generic <- do.call(rbind, lapply(seq_len(nrow(results)), function(i) {
-    r <- results[i, , drop = FALSE]
-    m <- meta[[r$analysis_id]]
-    data.frame(
-      id = m$id, study_id = "study_41", study_DOI = "10.1177/00986283251313760",
-      recomputation_status = "recomputed_from_raw_data", stat_test = "paired_t_test",
-      reported_result = m$reported_result,
-      p_value = r$p_value, p_operator = r$p_operator, p_sidedness = "two_sided",
-      t_value = r$t_value, t_df = r$df,
-      f_value = NA_real_, f_df1 = NA_real_, f_df2 = NA_real_,
-      z_value = NA_real_, chi2_value = NA_real_, chi2_df = NA_real_, r_value = NA_real_,
-      n1 = NA_real_, n2 = NA_real_, n_total = r$n_complete, n_eff = NA_real_,
-      effect_size_type = "cohens_dz_paired", effect_size_value = r$effect_size_value,
-      estimate = r$mean_difference, se_estimate = r$sd_difference / sqrt(r$n_complete),
-      raw_data_file = "data/raw/study_41/BART_Content_Knowledge_Deidentified.xlsx",
-      raw_variable_names = m$raw_variable_names,
-      model_formula = "paired t-test: POST - PRE (pairwise-complete)",
-      contrast_direction = "post minus pre",
-      extraction_note = r$notes, stringsAsFactors = FALSE
+  # Audit CSV: full native detail (means, SDs, match flags) for human review.
+  audit <- results |>
+    dplyr::select(
+      study_id, analysis_id, outcome, n_total, n_complete, n_missing_pair, df,
+      pre_mean, pre_sd, post_mean, post_sd, mean_difference, sd_difference,
+      t_value, p_value, effect_size_type, effect_size_value,
+      reported_t, reported_d, matches_reported_t, matches_reported_d, notes
     )
-  }))
-
-  readr::write_csv(generic, output_path, na = "")   # generic schema -> 98_compile
-  readr::write_csv(results, audit_path, na = "")    # full native detail
+  readr::write_csv(audit, audit_path, na = "")
   invisible(results)
 }

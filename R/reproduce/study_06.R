@@ -78,7 +78,7 @@ reproduce_study_06 <- function(
 
   rows <- make_recomputed_row(
     id = 5,
-    study_id = "study_6",
+    study_id = "study_06",
     study_DOI = "10.1177/14757257241295302",
     recomputation_status = "recomputed_from_raw_data_simple_effect",
     stat_test = "factorial_between_anova",

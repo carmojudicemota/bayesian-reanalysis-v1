@@ -161,7 +161,10 @@ fit_study_60_anova <- function(dat, outcome) {
 #' @param sav_path Path to the original author SPSS data file.
 #' @return A list with the main results table and an audit table.
 #' @export
-reproduce_study_60 <- function(sav_path) {
+reproduce_study_60 <- function(
+    sav_path = "data/raw/study_60/Syllabus_Safety_Cues_Instructor_Gender_Data_Sp21_OSF.sav",
+    output_path = "outputs/reproduced/study_60_recomputed.csv",
+    audit_path = "outputs/reproduced/study_60_recomputation_audit.csv") {
   if (!requireNamespace("haven", quietly = TRUE)) {
     stop("Package 'haven' is required. Install it with install.packages('haven').", call. = FALSE)
   }
@@ -325,5 +328,9 @@ reproduce_study_60 <- function(sav_path) {
     stringsAsFactors = FALSE
   )
 
-  list(results = results, audit = audit)
+  dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
+  readr::write_csv(results, output_path, na = "")
+  readr::write_csv(audit, audit_path, na = "")
+  message("Wrote: ", output_path)
+  invisible(list(results = results, audit = audit))
 }

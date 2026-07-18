@@ -152,7 +152,7 @@ reproduce_study_03 <- function(
 
   row1 <- tibble::tibble(
     id = 1,
-    study_id = "study_3",
+    study_id = "study_03",
     study_DOI = "10.1037/stl0000432",
     recomputation_status = "recomputed_from_raw_data_type_III_manova",
     stat_test = "manova",
@@ -198,7 +198,7 @@ reproduce_study_03 <- function(
 
   row2 <- tibble::tibble(
     id = 2,
-    study_id = "study_3",
+    study_id = "study_03",
     study_DOI = "10.1037/stl0000432",
     recomputation_status = "recomputed_from_raw_data_type_III_manova",
     stat_test = "manova",

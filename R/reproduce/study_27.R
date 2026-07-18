@@ -100,8 +100,11 @@ reproduce_study_27_pair <- function(dat, pre, post, analysis_id, outcome,
       " have complete pre/post on this item."))
 }
 
-reproduce_study_27 <- function(path) {
-  dat <- read_study_27_data(path)
+reproduce_study_27 <- function(
+    input_path = "data/raw/study_27/ClassExerciseData.sav",
+    output_path = "outputs/reproduced/study_27_recomputed.csv",
+    audit_path = "outputs/reproduced/study_27_recomputation_audit.csv") {
+  dat <- read_study_27_data(input_path)
   result_1 <- reproduce_study_27_pair(
     dat, pre = "Q3_4pre", post = "Q3_4", analysis_id = "study_27_result_1",
     outcome = "Made me feel closer to my classmate",
@@ -110,7 +113,9 @@ reproduce_study_27 <- function(path) {
     dat, pre = "Q3_9pre", post = "Q3_9", analysis_id = "study_27_result_2",
     outcome = "Made me feel a spirit of community with other students in my class",
     reported_t = 9.03, reported_d = 1.80)
-  dplyr::bind_rows(result_1, result_2)
+  results <- dplyr::bind_rows(result_1, result_2)
+  write_study_27_outputs(results, output_path, audit_path)
+  invisible(results)
 }
 
 # ---- write generic-schema recomputed CSV (98_compile-ready) + native audit ----

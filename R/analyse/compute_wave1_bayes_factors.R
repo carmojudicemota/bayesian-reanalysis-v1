@@ -30,6 +30,19 @@ compute_wave1_bayes_factors <- function(
       )
     )
 
+  # Guard (#2): sqrt(F) -> t is only valid when the F numerator has 1 df
+  # (a 2-level repeated-measures ANOVA, F(1, nu) = t^2). A multi-df F must never
+  # be silently square-rooted into a t. Stop loudly if any such row slipped in.
+  bad_rm <- wave1$frequentist_test == "repeated_measures_anova" &
+    !is.na(wave1$f_df1) & wave1$f_df1 != 1
+  if (any(bad_rm)) {
+    stop(
+      "repeated_measures_anova rows with f_df1 != 1 cannot be converted via sqrt(F): ",
+      paste(wave1$claim_id[bad_rm], collapse = ", "),
+      call. = FALSE
+    )
+  }
+
   bf_for_t_row <- function(t_val, df_val, n1, n2, rscale) {
     if (is.na(n2)) {
       bf <- meta.ttestBF(t = t_val, n1 = df_val + 1, rscale = rscale)

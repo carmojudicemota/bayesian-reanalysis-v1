@@ -15,7 +15,7 @@ if (length(missing_packages) > 0L) {
   )
 }
 
-source("R/reproduce_study_60.R")
+source("R/reproduce/study_60.R")
 
 sav_path <- file.path(
   "data", "raw", "study_60",
