@@ -269,6 +269,23 @@ build_claims_draft <- function(
       ali_reported_result,
       ali_reproduced_result,
       ali_result_status,
+      # PROJECT SCOPE RULE: only results Almuhanna's Phase 2 marked "Fully
+      # reproducible" are analysed. Everything else stays in the registry with a
+      # written reason (pre-registration item 9, Sampling Plan) but is never fed
+      # to a Bayesian model. Anything we discover about an out-of-scope result --
+      # a rounding-level effect-size mismatch, a transcription error in the
+      # source table -- is recorded in `note` only; it does not change eligibility.
+      in_scope = !is.na(ali_result_status) &
+        trimws(ali_result_status) == "Fully reproducible",
+      scope_exclusion_reason = dplyr::if_else(
+        in_scope,
+        NA_character_,
+        paste0(
+          "Out of scope: Almuhanna Phase 2 status is '",
+          dplyr::coalesce(ali_result_status, "missing"),
+          "', not 'Fully reproducible'."
+        )
+      ),
       project_verified_result,
       project_result_status,
       frequentist_test,
