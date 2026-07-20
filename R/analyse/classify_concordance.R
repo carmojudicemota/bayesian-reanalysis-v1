@@ -38,9 +38,14 @@ classify_bf_conclusion <- function(bf10, k = 3) {
 classify_bf_strength <- function(bf10) {
   result <- case_when(
     is.na(bf10) ~ NA_character_,
-    bf10 < 1 / 100 ~ "Decisive/extreme support for H0",
-    bf10 < 1 / 30 ~ "Very strong support for H0",
-    bf10 < 1 / 10 ~ "Strong support for H0",
+    # Boundaries are inclusive on the H0 side so the categories are exact
+    # reciprocals of the H1 side: the H1 side reads [1,3) [3,10) [10,30) [30,100)
+    # [100,Inf), so the H0 side must read (1/3,1) (1/10,1/3] (1/30,1/10]
+    # (1/100,1/30] (0,1/100]. With "<" here, BF = 1/10 was labelled "Substantial"
+    # while BF = 10 was labelled "Strong" -- the same evidence, different names.
+    bf10 <= 1 / 100 ~ "Decisive/extreme support for H0",
+    bf10 <= 1 / 30 ~ "Very strong support for H0",
+    bf10 <= 1 / 10 ~ "Strong support for H0",
     bf10 <= 1 / 3 ~ "Substantial/moderate support for H0",
     bf10 < 1 ~ "Weak/anecdotal support for H0",
     bf10 == 1 ~ "Equal support",
