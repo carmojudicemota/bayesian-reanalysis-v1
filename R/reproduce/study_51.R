@@ -84,10 +84,20 @@ reproduce_study_51 <- function(
       dat, 39, "perceived_learning_public_sharing_vs_closed_control", "knowledgeskills",
       "t(100) = 2.79, p < .01, d = 0.55", 0.01, "<", 0.55, "", data_path
     ),
+    # CORRECTED. The article does NOT report p < .01 for this result. Table 2 of
+    # Clinton-Lisell & Kelly (2023) reports six t-tests; only the perceived-learning
+    # value carries a significance marker (2.79**), and the table note defines
+    # "** p < .01". The Anxiety row reads "-0.95" with NO marker, i.e. non-significant,
+    # alongside d = -0.19 and 95% CI [-0.58, 0.20] which excludes neither direction.
+    # The "p < .01" previously recorded here was carried over in error from the row
+    # above during Phase 2 extraction; it is not in the article. Our recomputed
+    # p = .3460 is therefore fully consistent with what was published, and there is
+    # no reporting inconsistency in the source study.
     recompute_study_51_independent_t(
       dat, 40, "anxiety_public_sharing_vs_closed_control", "anxiety",
-      "t(100) = -0.95, p < .01, d = -0.19", 0.01, "<", -0.19,
-      "Reported p < .01 is incompatible with t = -0.95 and df = 100; recomputed p is retained for the Bayesian layer.",
+      "t(100) = -0.95, d = -0.19, 95% CI [-0.58, 0.20] (Table 2; no significance marker)",
+      NA_real_, "", -0.19,
+      "",
       data_path
     )
   )
