@@ -36,10 +36,6 @@ compute_wave1_bayes_factors <- function(
         "one_sided", "two_sided"
       )
     )
-
-  # Guard (#2): sqrt(F) -> t is only valid when the F numerator has 1 df
-  # (a 2-level repeated-measures ANOVA, F(1, nu) = t^2). A multi-df F must never
-  # be silently square-rooted into a t. Stop loudly if any such row slipped in.
   bad_rm <- wave1$frequentist_test == "repeated_measures_anova" &
     !is.na(wave1$f_df1) & wave1$f_df1 != 1
   if (any(bad_rm)) {
@@ -49,11 +45,6 @@ compute_wave1_bayes_factors <- function(
       call. = FALSE
     )
   }
-
-  # One-sided BFs are order-restricted to the side the observed effect falls on,
-  # which is the side the article's one-sided test was run on (verifiable: a
-  # published one-sided p equals the two-sided p / 2). extractBF()$bf[1] is the
-  # restricted hypothesis; [2] would be its complement.
   bf_for_t_row <- function(t_val, df_val, n1, n2, rscale, one_sided = FALSE) {
     null_interval <- if (!one_sided) NULL else
       if (!is.na(t_val) && t_val >= 0) c(0, Inf) else c(-Inf, 0)
