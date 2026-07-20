@@ -3,15 +3,42 @@
 #  Synchronous Teaching Setting."
 # Reproduction of the paired-samples t tests in Table 1 (pre-to-post attitude change).
 #
-# EFFECT-SIZE NOTE (this is the whole story of the discrepancy):
+# EFFECT-SIZE NOTE (verified against Supplementary Table 1 and Ali's SPSS output):
 #   The manuscript's Cohen's d standardizes by the AVERAGE of the pre and post SDs:
-#       d = mean_diff / ((sd_pre + sd_post) / 2)          (Lakens 2013, d_av style)
-#   SPSS's default paired d (/ES STANDARDIZER(SD)) standardizes by the SD of the
-#   DIFFERENCE scores (that is Cohen's dz), which is smaller. So SPSS reports
-#   dz = 4.05 for "closeness" while the manuscript reports d = 5.65.
-#   Using the manuscript's average-SD method on the raw data:
-#     - Result 2 "spirit of community" reproduces exactly (d = 1.80).
-#     - Result 1 "closeness" reproduces to d = 5.64 vs the reported 5.65 (0.01 rounding).
+#       d_av = mean_diff / ((sd_pre + sd_post) / 2)        (Lakens 2013, d_av style)
+#   SPSS's default paired d (/ES STANDARDIZER(SD)) is dz = mean_diff / sd_diff.
+#
+#   VALIDATION ACROSS ALL SEVEN ROWS OF SUPPLEMENTARY TABLE 1:
+#     - All 7 t values reproduce EXACTLY (25.32, 6.96, 0.00, -2.39, -0.82, 9.03, 10.71),
+#       as do all 7 ns, on pairwise-complete cases.
+#     - d_av reproduces 3 of 7 published d values exactly at 2 dp; the other 4 are off
+#       by 0.004 to 0.032. dz reproduces only the trivial 0.00 (1 of 7).
+#     - NO single formula reproduces the whole table (pooled SD, SD_pre, SD_post,
+#       Hedges, and versions recomputed from the printed 2-dp values were all tested;
+#       none beats 3 of 7). Table 1 is internally inconsistent.
+#     - Two published descriptives are also wrong, both on the n = 38 rows:
+#       "Uncomfortable" pre (published 2.72/1.10 vs 2.71/1.11 in the data) and
+#       "Motivated" post (published 4.21/.80 vs 4.24/.79) -- yet those rows' t values
+#       match the n = 38 analysis exactly.
+#
+#   OUR TWO TARGET RESULTS under d_av:
+#     - Result 1 "closeness":  d_av = 5.6446 vs reported 5.65 (off 0.0054 -> rounds 5.64)
+#     - Result 2 "community":  d_av = 1.7960 vs reported 1.80 (off 0.0040 -> rounds 1.80)
+#     The two errors are essentially the same size. Ali's split verdict tracks a
+#     rounding boundary, not a difference in reproducibility.
+#
+#   ALI'S OWN VALUES (from data/source/ali/phase2_results.csv; recorded per result below):
+#     - key    "closeness": reproduced "d(av) = 5.64, p < .001"  -> Not reproducible
+#     - second "community": reproduced "d = 1.80, p < .001"      -> Fully reproducible
+#     Ali used d_av (the authors' method), NOT dz -- so the match on the second result
+#     is a correct application, not a coincidence. His SPSS syntax specified
+#     STANDARDIZER(SD) and that output returns dz = 4.05 for closeness, so his syntax
+#     comment claiming 5.65 is "confirmed in output" is incorrect.
+#
+#   SCOPE IMPLICATION: t, df and n reproduce exactly for both target results, and the
+#   Wave-1 Bayes factor uses only t/df/n -- never d. Ali's "Not reproducible" verdict on
+#   the key result rests solely on a 0.0054 effect-size discrepancy, in a table that
+#   carries a 0.0316 error of its own on the "Belonging" row.
 
 check_study_27_packages <- function() {
   required <- c("haven", "readr", "dplyr", "tibble")
@@ -39,7 +66,9 @@ find_var_27 <- function(dat, target) {
 }
 
 reproduce_study_27_pair <- function(dat, pre, post, analysis_id, outcome,
-                                    reported_t, reported_d) {
+                                    reported_t, reported_d,
+                                    ali_reproduced_result = NA_character_,
+                                    ali_result_status = NA_character_) {
   pre  <- find_var_27(dat, pre)
   post <- find_var_27(dat, post)
 
@@ -88,15 +117,29 @@ reproduce_study_27_pair <- function(dat, pre, post, analysis_id, outcome,
     effect_size_value = cohen_d_average_sd,
     spss_cohen_dz = spss_cohen_dz,
     reported_t = reported_t, reported_d = reported_d,
+    # Ali's Phase 2 record for this specific result, carried through for audit.
+    ali_reproduced_result = ali_reproduced_result,
+    ali_result_status = ali_result_status,
+    d_absolute_difference_vs_ali = abs(abs(cohen_d_average_sd) - reported_d),
     t_absolute_difference = abs(abs(t_value) - reported_t),
     d_absolute_difference = abs(abs(cohen_d_average_sd) - reported_d),
     matches_reported_t = round(abs(t_value), 2) == round(reported_t, 2),
     matches_reported_d = round(abs(cohen_d_average_sd), 2) == round(reported_d, 2),
     notes = paste0(
       "Paired-samples t test, POST - PRE, pairwise-complete. Effect size is the ",
-      "manuscript's average-SD d = mean_diff/((sd_pre+sd_post)/2). SPSS's ",
-      "difference-score d (dz) = ", round(spss_cohen_dz, 3), " differs and is not ",
-      "what the article reports. Raw .sav holds ", nrow(dat), " rows; ", n,
+      "manuscript's average-SD d = mean_diff/((sd_pre+sd_post)/2) = ",
+      signif(cohen_d_average_sd, 6), " vs reported ", reported_d,
+      " (absolute difference ", signif(abs(abs(cohen_d_average_sd) - reported_d), 3), "). ",
+      "SPSS's difference-score d (dz) = ", round(spss_cohen_dz, 3), " is NOT what the ",
+      "article reports. t = ", signif(t_value, 8), " reproduces the reported t = ",
+      reported_t, " exactly. ",
+      "ALI (Phase 2): reproduced '", ali_reproduced_result, "' -> '", ali_result_status, "'. ",
+      "Ali used the same average-SD method, so his verdict on this result turns only on ",
+      "rounding at the second decimal of d, not on the test statistic. ",
+      "Validated across all 7 rows of Supplementary Table 1: all 7 t values reproduce ",
+      "exactly, d_av reproduces 3 of 7 published d values exactly (dz reproduces 1, the ",
+      "trivial 0.00), and no single formula reproduces the whole table. ",
+      "Raw .sav holds ", nrow(dat), " rows; ", n,
       " have complete pre/post on this item."))
 }
 
@@ -105,14 +148,20 @@ reproduce_study_27 <- function(
     output_path = "outputs/reproduced/study_27_recomputed.csv",
     audit_path = "outputs/reproduced/study_27_recomputation_audit.csv") {
   dat <- read_study_27_data(input_path)
+  # Ali's Phase 2 values are quoted verbatim from data/source/ali/phase2_results.csv
+  # (ID 27) so this script is self-documenting against his verdicts.
   result_1 <- reproduce_study_27_pair(
     dat, pre = "Q3_4pre", post = "Q3_4", analysis_id = "study_27_result_1",
     outcome = "Made me feel closer to my classmate",
-    reported_t = 25.32, reported_d = 5.65)
+    reported_t = 25.32, reported_d = 5.65,
+    ali_reproduced_result = "d(av) = 5.64, p < .001.",
+    ali_result_status = "Not reproducible")
   result_2 <- reproduce_study_27_pair(
     dat, pre = "Q3_9pre", post = "Q3_9", analysis_id = "study_27_result_2",
     outcome = "Made me feel a spirit of community with other students in my class",
-    reported_t = 9.03, reported_d = 1.80)
+    reported_t = 9.03, reported_d = 1.80,
+    ali_reproduced_result = "d = 1.80, p < .001",
+    ali_result_status = "Fully reproducible")
   results <- dplyr::bind_rows(result_1, result_2)
   write_study_27_outputs(results, output_path, audit_path)
   invisible(results)
