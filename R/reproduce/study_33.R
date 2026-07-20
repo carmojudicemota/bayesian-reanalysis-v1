@@ -70,7 +70,7 @@ reproduce_study_33 <- function(
     ),
     recompute_study_33_one_sample(
       dat, 21, "applicability_of_social_psychology", "SocialPsychRealWorld_Avg",
-      "t(11) = 16.03, p = .001, d = 4.63, 95% CI [1.41, 1.86]",
+      "t(11) = 16.03, p < .001, d = 4.63, 95% CI [1.41, 1.86]",  # CORRECTED: Ali's phase-2 sheet mistyped this as p = .001; the manuscript reports p < .001. Recomputed p = 5.650749e-09. (Peter Allen, 17 Jul)
       0.001, 4.63, data_path
     )
   )

@@ -215,6 +215,23 @@ build_claims_draft <- function(
     )
   }
   
+  # Orphan check: claim_map drives this join, so any study that reproduced but has
+  # no claim_map row is dropped silently and never becomes a claim. That is how
+  # study_27, study_29 and study_37 went missing. Report it loudly instead.
+  reproduced_studies <- sort(unique(verified$study_id))
+  mapped_studies <- sort(unique(claim_map$study_id))
+  unmapped_studies <- setdiff(reproduced_studies, mapped_studies)
+
+  if (length(unmapped_studies) > 0) {
+    warning(
+      "These studies have reproduced results but NO rows in config/claim_map.csv, ",
+      "so they are excluded from claims.csv: ",
+      paste(unmapped_studies, collapse = ", "),
+      ". Add claim_map rows for them (or record why they are out of scope).",
+      call. = FALSE
+    )
+  }
+
   inconsistent_studies <- joined |>
     dplyr::filter(
       !is.na(verified_study_id),

@@ -22,3 +22,7 @@ for (fn_name in reproduce_fns) {
 }
 
 source("R/reproduce/98_compile_recomputed_results.R")
+
+# Validate at source: schema completeness + the directionality invariant
+# (stored p must match its p_sidedness label). Stops if anything is off.
+source("R/reproduce/99_validate_recomputed_results.R")

@@ -4,11 +4,13 @@
 # Reconstructs the delayed-recall repeated-measures GLM for Hypothesis 2.
 #
 # Important reconstruction note:
-# The article reports F(2, 116) = 4.22, p < .02, eta_p2 = .07.
-# The shared data reproduce the article's condition means exactly, but the inferential
-# statistic obtained from the uploaded author data and syntax variables is larger.
-# This script therefore stores the recomputed statistic and explicitly flags the mismatch;
-# it does not force the published value.
+# The article reports F(2, 116) = 4.22, p < .02, eta_p2 = .07, and this IS reproduced.
+# The earlier apparent mismatch (F = 10.43) was a sums-of-squares issue, diagnosed by
+# Peter Allen: the authors are psychologists with wide data, indicating SPSS/SAS, which
+# default to Type III SS. The original script used weighted (Type I/II) marginal means.
+# Because the between factor is unbalanced (Sex: F = 45, M = 15) the two differ sharply.
+# Using Type III SS recovers F(2, 116) = 4.2232, p = .01697, eta_p2 = .0679.
+# Cross-check in afex: aov_ez(id, dv, between = "Sex", within = "Condition", type = 3).
 
 reproduce_study_35 <- function(
     input_path = "data/raw/study_35/Untitled3.sav",
@@ -87,10 +89,28 @@ reproduce_study_35 <- function(
     groups <- unique(between_factor)
     g <- length(groups)
 
-    grand_mean <- mean(Y)
-    condition_means <- colMeans(Y)
+    # Weighted (Type I/II) marginals -- retained only for the interaction term below.
+    grand_mean_weighted <- mean(Y)
+    condition_means_weighted <- colMeans(Y)
 
-    ss_condition <- n * sum((condition_means - grand_mean)^2)
+    # TYPE III SUMS OF SQUARES (SPSS/SAS default; afex::aov_ez(type = 3)).
+    # The authors are psychologists using SPSS, so the article's F is Type III.
+    # With unbalanced between-groups (here Sex: F = 45, M = 15) the Condition main
+    # effect must be built from UNWEIGHTED marginal means with an effective n of
+    # g * harmonic-mean(group sizes). Weighting by group size (Type I/II) inflates
+    # the F to 10.43; Type III recovers the article's F(2, 116) = 4.22.
+    group_sizes <- vapply(groups, function(q) sum(between_factor == q), numeric(1))
+    group_condition_matrix <- t(vapply(
+      groups,
+      function(q) colMeans(Y[between_factor == q, , drop = FALSE]),
+      numeric(k)
+    ))
+    condition_means <- colMeans(group_condition_matrix)
+    grand_mean <- mean(condition_means)
+    harmonic_n <- g / sum(1 / group_sizes)
+    n_effective <- g * harmonic_n
+
+    ss_condition <- n_effective * sum((condition_means - grand_mean)^2)
     ss_condition_by_group <- 0
     ss_error_condition <- 0
 
@@ -104,7 +124,8 @@ reproduce_study_35 <- function(
       group_subject_means <- rowMeans(Y_group)
 
       ss_condition_by_group <- ss_condition_by_group +
-        n_group * sum((group_condition_means - group_mean - condition_means + grand_mean)^2)
+        n_group * sum((group_condition_means - group_mean -
+                         condition_means_weighted + grand_mean_weighted)^2)
 
       ss_error_condition <- ss_error_condition +
         sum((Y_group - group_subject_means - matrix(group_condition_means, nrow = n_group, ncol = k, byrow = TRUE) + group_mean)^2)
@@ -123,6 +144,8 @@ reproduce_study_35 <- function(
     list(
       n = n,
       number_of_groups = g,
+      n_effective = n_effective,
+      sums_of_squares_type = 3L,
       ss_condition = ss_condition,
       ss_condition_by_group = ss_condition_by_group,
       ss_error_condition = ss_error_condition,
@@ -239,8 +262,13 @@ reproduce_study_35 <- function(
       unadjusted$df_condition, ", ", unadjusted$df_error, ") = ",
       round(unadjusted$f_value, 6), ", p = ", signif(unadjusted$p_value, 6),
       ", eta_p2 = ", round(unadjusted$eta_p2, 6), ". ",
-      "The published inferential value F(2,116) = 4.22, eta_p2 = .07 is not recovered from the uploaded data/syntax variables. ",
-      "The script does not exclude participant 39 and does not force the article value. Variable ordering only changes labels/contrasts, not the omnibus condition F."
+      "Sums of squares: TYPE III (SPSS/SAS default), using unweighted marginal means and ",
+      "an effective n of g * harmonic-mean(group sizes) = ", round(sex_controlled$n_effective, 6), ". ",
+      "This recovers the published F(2, 116) = 4.22, eta_p2 = .07. The earlier reported mismatch ",
+      "(F = 10.427106) came from weighted Type I/II marginals, which are inflated here because the ",
+      "between factor is unbalanced (Sex: 45 F, 15 M). Diagnosis credited to Peter Allen; ",
+      "cross-checked against afex::aov_ez(type = 3). The script does not exclude participant 39 and ",
+      "does not force the article value. Variable ordering only changes labels/contrasts, not the omnibus condition F."
     )
   )
 

@@ -93,7 +93,7 @@ reproduce_study_05 <- function(
       dat, 3,
       "senior_year_16_item_quiz_performance",
       "16ItemQuizFollowupPerformance",
-      "t(154) = 3.26, p < .001, d = 0.74",
+      "t(154) = 3.26, p = .001, d = 0.74",   # CORRECTED: manuscript typed "p < .001" but jamovi reports p = .001; recomputed p = .0013572, two-tailed (Peter Allen, 17 Jul).
       0.001, 0.74, data_path
     ),
     recompute_study_05_independent_t(

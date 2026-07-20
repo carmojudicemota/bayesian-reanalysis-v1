@@ -216,8 +216,8 @@ reproduce_study_41 <- function(
 #' @return A tibble in the shared recomputed schema.
 build_study_41_generic <- function(results) {
   reported <- c(
-    study_41_result_1 = "t(36) = 8.53, p < .001, d = 1.56",
-    study_41_result_2 = "t(36) = 6.15, p < .001, d = 1.14"
+    study_41_result_1 = "t = 8.53, p < .001, d = 1.56",   # article reports NO df; Ali's G42 "36" is not in the manuscript (Peter Allen, 17 Jul). True df = 29.
+    study_41_result_2 = "t = 6.15, p < .001, d = 1.14"    # article reports NO df; Ali's U42 "36" is not in the manuscript (Peter Allen, 17 Jul). True df = 28.
   )
   ids <- c(study_41_result_1 = 28L, study_41_result_2 = 29L)
   vnames <- c(

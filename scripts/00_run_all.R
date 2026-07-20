@@ -13,9 +13,8 @@ build_verified_results_draft()                 # -> data/derived/verified_result
 source("R/prepare/build_claims.R")
 build_claims_draft()                           # -> data/derived/claims_draft.csv
 
-# 4. one-sided -> two-sided p where policy requires
-source("R/prepare/resolve_claim_directionality.R")
-resolve_claim_directionality()                 # -> data/derived/claims_draft.csv (in place)
+# 4. (directionality is enforced at source, in 99_validate_recomputed_results.R,
+#     which run_all_reproductions.R runs in step 1 -- nothing to do here)
 
 # 5. promote draft -> master (compute_wave1 reads data/derived/claims.csv)
 #    claims.csv is rebuilt from claim_map.csv, so your directionality recodes flow through here.
