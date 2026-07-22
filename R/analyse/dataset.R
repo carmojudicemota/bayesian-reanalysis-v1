@@ -236,8 +236,10 @@ build_dataset_outputs <- function(
   write_csv(column_profile, file.path(table_dir, "dataset_data_dictionary.csv"), na = "")
   write_csv(manifest, file.path(table_dir, "dataset_manifest.csv"), na = "")
   
-  family_order <- family_summary$family_label
-  plot_claims <- family_summary |>
+  plot_families <- family_summary |> filter(family_key != "unclassified")
+  claims_families <- claims |> filter(family_key != "unclassified")
+  family_order <- plot_families$family_label
+  plot_claims <- plot_families |>
     select(family_label, claim_count, study_count) |>
     pivot_longer(
       cols = c(claim_count, study_count),
@@ -272,10 +274,10 @@ build_dataset_outputs <- function(
     theme_reanalysis() +
     theme(panel.grid.major.y = element_blank())
   
-  status_data <- claims |>
+  status_data <- claims_families |>
     count(family_label, status, name = "claim_count") |>
     complete(
-      family_label = family_summary$family_label,
+      family_label = family_order,
       status = required_statuses,
       fill = list(claim_count = 0L)
     ) |>
@@ -298,10 +300,10 @@ build_dataset_outputs <- function(
     theme_reanalysis() +
     theme(panel.grid.major.y = element_blank())
   
-  role_data <- claims |>
+  role_data <- claims_families |>
     count(family_label, role, name = "claim_count") |>
     complete(
-      family_label = family_summary$family_label,
+      family_label = family_order,
       role = c("primary", "supplementary"),
       fill = list(claim_count = 0L)
     ) |>
@@ -323,7 +325,7 @@ build_dataset_outputs <- function(
     theme_reanalysis() +
     theme(panel.grid.major.y = element_blank())
   
-  sample_data <- claims |>
+  sample_data <- claims_families |>
     filter(!is.na(n_total), n_total > 0) |>
     mutate(
       family_label = fct_reorder(family_label, n_total, .fun = median, .desc = FALSE)
