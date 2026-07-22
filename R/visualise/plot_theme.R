@@ -28,7 +28,7 @@ theme_reanalysis <- function(base = 12) {
 
 save_fig <- function(plot, path, w = 8, h = 5.5) {
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
-  ggsave(path, width = w, height = h, dpi = 300)
+  ggsave(path, plot = plot, width = w, height = h, dpi = 300)
 }
 
 
