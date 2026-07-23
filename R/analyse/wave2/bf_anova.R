@@ -2,7 +2,7 @@ library(BayesFactor); library(dplyr); library(purrr)
 
 run_family_A <-function(claim, priors){
   d <- load_wave2_data(claim$study_id)
-  grid <- priors |> filter(prior_family == "anova_cauchy", parm == "rscale_fixed")
+  grid <- priors |> filter(prior_family == "anova_cauchy", param == "rscale_fixed")
   pmap_dfr(grid, function(prior_label, value, ...) {
     bfs <- BayesFactor::generalTestBF(outcome ~ A * B, data = d,
                                       whichModels = "all", rscaleFixed = value,
@@ -14,7 +14,7 @@ run_family_A <-function(claim, priors){
   })
 }
 
-run_family_B <- function(claim, prior){
+run_family_B <- function(claim, priors){
   long <- load_wave2_data(claim$study_id)
   rr <- priors$value[priors$prior_family == "anova_cauchy" & priors$param == "rscale_random"][1]
   grid <- priors |> filter(prior_family == "anova_cauchy", param == "rscale_fixed")

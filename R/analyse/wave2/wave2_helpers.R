@@ -30,3 +30,13 @@ wave2_row <- function(claim, prior_label, rscale, bf10, prior_family,
   )
 }
 
+record_mcmc_diagnostics <- function(claim_id, rhat_max, ess_min, divergences, ppc_ok,
+                                    path = "outputs/tables/wave2_mcmc_diagnostics.csv") {
+  ok <- rhat_max < 1.01 && ess_min > 400 && divergences == 0 && isTRUE(ppc_ok)
+  readr::write_csv(
+    tibble::tibble(claim_id, rhat_max, ess_min, divergences, ppc_ok, passed = ok),
+    path, append = file.exists(path))
+  if (!ok) stop("MCMC checks failed for ", claim_id, call. = FALSE)
+  invisible(ok)
+}
+

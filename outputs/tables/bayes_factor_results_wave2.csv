@@ -1,0 +1,4 @@
+claim_id,study_id,stat_test,bf_family,design,bf_sidedness,bf_direction,observed_sign,direction_matches_observed,prior_label,rscale,t_for_bf,df_for_bf,r_value,n1,n2,n_total,p_value,bf10,bf_error,prior_family,model_null,model_alt
+study_29_claim_02,study_29,factorial_between_anova,anova_cauchy,wave2,two_sided,NA,NA,NA,narrow,0.25,NA,NA,NA,NA,NA,433,1.8812884935687636e-4,188.67618283965155,0.3307676781332361,anova_cauchy,B,A + B
+study_29_claim_02,study_29,factorial_between_anova,anova_cauchy,wave2,two_sided,NA,NA,NA,primary,0.5,NA,NA,NA,NA,NA,433,1.8812884935687636e-4,82.43478146801927,0.0129205203616015,anova_cauchy,B,A + B
+study_29_claim_02,study_29,factorial_between_anova,anova_cauchy,wave2,two_sided,NA,NA,NA,wide,0.707,NA,NA,NA,NA,NA,433,1.8812884935687636e-4,69.23442686271935,0.03554681070513004,anova_cauchy,B,A + B

@@ -6,7 +6,7 @@ library(BayesFactor)
 compute_wave1_bayes_factors <- function(
     claims_path = "data/derived/claims.csv",
     priors_path = "config/priors.csv",
-    output_path = "outputs/tables/bayes_factor_results.csv"
+    output_path = "outputs/tables/bayes_factor_results_wave1.csv"
 ) {
   claims <- read_csv(claims_path, show_col_types = FALSE)
   priors <- read_csv(priors_path, show_col_types = FALSE)
