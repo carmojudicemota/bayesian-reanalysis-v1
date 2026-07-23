@@ -1,0 +1,68 @@
+Metadata for the project:
+"Combining a Direct and Indirect Training Approach for Cross-Domain Competences: The Case of the Course 'Pedagogy for Psychotherapists'"
+
+1. Connected Files:
+
+Data files: A) Main Study "Data_CombinedApproach_220523", B) Pilot Study "Data_Pilotstudy_CombinedApproach_220523"
+Syntax files: A) "Syntax_CombinedApproach_220523", B) "Syntax_Pilotstudy_CombinedApproach_220523"
+Codebook: "Codebook_CombinedApproach_220523"
+
+2. A) Main Study: What data
+
+Participants: 42 participants, undergraduate students taking part in the module "Pedagogy for Psychotherapists" at the Freie Universitaet Berlin
+Location: Berlin, Germany
+Method: collected online using LimeSurvey
+Type of data: Data file contains demographic data (age, gender), questionnaire data (Need for cognition, Verbal intelligence, Cognitive Load, etc.), answers to prior and posttest declarative knowledge, answers to self-explanation prompts, and argumentation scores.
+Time of collection: Summer semester 2021
+Description: number of variables = 322, number of cases = 42, Missing data code = -99.
+
+   B) Pilot Study: What data
+
+Participants: 171 adults from the general population, aged 18+ (n = 42 removed due to missing consent for sharing of data)
+Location: Germany
+Method: collected online using LimeSurvey
+Type of data: Data file contains demographic data (age, gender), questionnaire data (Need for cognition), answers to prior and posttest declarative knowledge, answers to self-explanation prompts and fading questions, and judgements of learning materials.
+Time of collection: Summer 2020
+Description: number of variables = 177, number of cases = 129, Missing data codes = -9, -99, -999, 99.
+
+3. A) Main Study: Data Processing
+
+Data preparation and analysis documented in Syntax file "Syntax_CombinedApproach_220523".
+Data relating to A-level grade, years of education, and argumentations written by participants in their study assignments deleted for anonymization.
+These data can be given upon request and additional data protection measures.
+
+   B) Pilot Study: Data Processing
+
+Data preparation and analysis documented in Syntax file "Syntax_Pilotstudy_CombinedApproach_220523".
+Data relating to years of education and education achieved deleted for anonymization.
+These data can be given upon request and additional data protection measures.
+
+4. Data protection
+
+Data were saved on password-protected computer systems and only accessible to the primary researcher.
+Data were anonymized after conclusion of data analysis to protect participants.
+
+5. Informed Consent
+
+Participants were informed of the aims and contents of the study before giving consent for their participation.
+Separate consent was given for saving data in data repositorium.
+All data of participants who had not given consent for data sharing using data repositorium were removed from datasets prior to publication.
+
+6. Pseudonymization and Anonymization
+
+Data were initially pseudonymized by removing participants' names and using a researcher-generated code instead.
+Names and codes were saved in separate password-protected excel file.
+Data were then anonymized by deleting the code-list containing names and codes by the 31.03.2022.
+
+7. Methodological Information
+
+Software for analysis: IBM SPSS Statistics, Version 28.
+Software for collection: LimeSurvey, Version 3.22.
+
+8. Data Usage
+
+The theoretical framework for the project, description of data collection, analysis and interpretation can be found in the following publication: 
+Udvardi-Lakos, N., Weirich, M., Lützenburger, K., Asbrand, J., & Renkl, A. (under review). Combining a Direct and Indirect Training Approach for Cross-Domain Competences: The Case of the Course 'Pedagogy for Psychotherapists'.
+The learning material can be requested from the primary author.
+
+Data available under Ceative Commons Licence CC-BY-NC-SA.
