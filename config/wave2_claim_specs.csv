@@ -1,0 +1,16 @@
+claim_id,outcome_column,handler,model_null,model_alt,target_description,activation_state
+study_29_claim_02,univkids,factorial_additive,B,A + B,Title effect in additive model controlling for Department,active
+study_10_claim_01,GHQc.total,factorial_additive,B,A + B,Replicate main effect in additive model controlling for university,planned
+study_10_claim_02,QHQb.total,factorial_additive,B,A + B,Replicate main effect in additive model controlling for university,planned
+study_13_claim_01,subj_total,welch_model_averaged,delta = 0,delta != 0,Subjective-knowledge mean difference with variance model averaging,planned
+study_13_claim_02,obj_total,welch_model_averaged,delta = 0,delta != 0,Objective-knowledge mean difference with variance model averaging,planned
+study_60_claim_01,fieldbelong_exact_winsorized,factorial_additive,B,A + B,Safety-cue main effect in additive model controlling for professor gender,planned
+study_60_claim_02,include_1,factorial_additive,B,A + B,Safety-cue main effect in additive model controlling for professor gender,planned
+study_06_claim_01,BCBSTotalScore,simple_effect_full_error,,,Condition simple effect within PSYC 111 using full-model residual error,blocked
+study_35_claim_01,,mixed_type3_condition,,,Sex-adjusted Type III condition effect,blocked
+study_43_claim_01,reviewed,custom_reviewed_contrast,,,Reviewed-content testing contrast adjusted for Lecture and question type,blocked
+study_43_claim_02,questiontype,custom_questiontype_contrast,,,Question-type contrast adjusted for Lecture and question type,blocked
+study_47_claim_02,,mixed_interaction,,,Condition by prediction-format interaction,blocked
+study_37_claim_01,,glmm_summary_diagnostic,beta = 0,beta != 0,Normal summary-likelihood diagnostic only,diagnostic
+study_37_claim_02,,glmm_summary_diagnostic,beta = 0,beta != 0,Normal summary-likelihood diagnostic only,diagnostic
+study_55_claim_01,,welch_anova_heteroscedastic,,,Four-group heteroscedastic omnibus comparison,blocked
