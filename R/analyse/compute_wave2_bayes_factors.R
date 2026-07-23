@@ -1,72 +1,116 @@
-library(readr)
-library(dplyr)
-library(purrr)
-library(tidyr)
-source("R/analyse/wave2/wave2_helpers.R")
-source("R/analyse/wave2/load_wave2_data.R")
-source("R/analyse/wave2/bf_anova.R")
+source(
+  "R/analyse/wave2/wave2_helpers.R"
+)
+
+source(
+  "R/analyse/wave2/factorial_anova.R"
+)
+
+source(
+  "R/analyse/wave2/study_29.R"
+)
+
+source(
+  "R/analyse/wave2/study_10.R"
+)
+
 
 compute_wave2_bayes_factors <- function(
-    claims_path = "data/derived/claims.csv",
-    priors_path = "config/priors_wave2.csv",
-    specs_path = "config/wave2_claim_specs.csv",
-    output_path = "outputs/tables/bayes_factor_results_wave2.csv") {
+    claims_path =
+      "data/derived/claims.csv",
+    priors_path =
+      "config/priors_wave2.csv",
+    output_path =
+      "outputs/tables/bayes_factor_results_wave2.csv") {
   
-  claims <- readr::read_csv(claims_path, show_col_types = FALSE)
-  priors <- readr::read_csv(priors_path, show_col_types = FALSE)
-  specs <- readr::read_csv(specs_path, show_col_types = FALSE)
+  claims <- readr::read_csv(
+    claims_path,
+    show_col_types = FALSE
+  )
   
-  duplicate_specs <- specs$claim_id[duplicated(specs$claim_id)]
-  if (length(duplicate_specs) > 0) {
-    stop("Duplicate claim IDs in wave2_claim_specs.csv: ",
-         paste(unique(duplicate_specs), collapse = ", "), call. = FALSE)
-  }
+  priors <- readr::read_csv(
+    priors_path,
+    show_col_types = FALSE
+  )
   
-  wave2 <- claims |>
-    filter(status == "ready", in_scope) |>
-    inner_join(specs, by = "claim_id") |>
-    filter(activation_state == "active") |>
-    mutate(
-      bf_sidedness = if_else(
-        !is.na(p_sidedness) & p_sidedness == "one_sided",
-        "one_sided",
-        "two_sided"
-      ),
-      bf_direction = if_else(
-        bf_sidedness == "one_sided",
-        direction,
-        NA_character_
+  supported_claims <- c(
+    "study_29_claim_02",
+    "study_10_claim_01",
+    "study_10_claim_02"
+  )
+  
+  ready_claims <- claims |>
+    dplyr::filter(
+      .data$claim_id %in%
+        supported_claims,
+      .data$status == "ready",
+      .data$in_scope
+    )
+  
+  results <- purrr::map_dfr(
+    seq_len(nrow(ready_claims)),
+    function(i) {
+      
+      claim <- as.list(
+        ready_claims[
+          i,
+          ,
+          drop = FALSE
+        ]
       )
-    )
+      
+      switch(
+        claim$study_id,
+        
+        study_29 =
+          compute_study_29_bayes_factors(
+            claim = claim,
+            priors = priors
+          ),
+        
+        study_10 =
+          compute_study_10_bayes_factors(
+            claim = claim,
+            priors = priors
+          ),
+        
+        stop(
+          "No Wave 2 implementation for ",
+          claim$claim_id,
+          ".",
+          call. = FALSE
+        )
+      )
+    }
+  )
   
-  if (nrow(wave2) == 0) {
-    message("compute_wave2_bayes_factors: no active, ready Wave 2 claims; nothing written.")
-    return(invisible(NULL))
+  if (nrow(ready_claims) == 0L) {
+    results <- wave2_result_template()
   }
   
-  results <- purrr::pmap_dfr(wave2, function(...) {
-    claim <- list(...)
-    
-    switch(
-      claim$handler,
-      factorial_additive = run_family_A(claim, priors),
-      welch_model_averaged = {
-        source("R/analyse/wave2/bf_welch_t.R", local = TRUE)
-        run_family_C(claim, priors)
-      },
-      stop("No active Wave 2 handler for ", claim$claim_id,
-           " (handler = ", claim$handler, ")", call. = FALSE)
-    )
-  })
+  dir.create(
+    dirname(output_path),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
   
-  key_counts <- results |>
-    count(claim_id, prior_label, name = "n") |>
-    filter(n != 1)
-  if (nrow(key_counts) > 0) {
-    stop("Wave 2 output contains duplicate claim/prior rows.", call. = FALSE)
-  }
+  readr::write_csv(
+    results,
+    output_path,
+    na = ""
+  )
   
-  dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
-  readr::write_csv(results, output_path)
+  message(
+    "Created Wave 2 output for ",
+    dplyr::n_distinct(
+      results$claim_id
+    ),
+    " claims from ",
+    dplyr::n_distinct(
+      results$study_id
+    ),
+    " studies."
+  )
+  
   invisible(results)
 }

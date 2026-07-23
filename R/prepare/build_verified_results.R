@@ -107,5 +107,3 @@ build_verified_results_draft <- function(
   invisible(verified)
 }
 
-# NOTE: no build call at file scope. Sourcing this file must only define
-# functions; scripts/00_run_all.R calls build_verified_results_draft() explicitly.
