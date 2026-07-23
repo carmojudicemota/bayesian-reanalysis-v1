@@ -1,9 +1,12 @@
 source("R/analyse/wave2/wave2_helpers.R")
 source("R/analyse/wave2/factorial_anova.R")
+source("R/analyse/wave2/mixed_anova.R")
+
 source("R/analyse/wave2/study_29.R")
 source("R/analyse/wave2/study_10.R")
 source("R/analyse/wave2/study_60.R")
 source("R/analyse/wave2/study_47.R")
+source("R/analyse/wave2/study_35.R")
 
 
 compute_wave2_bayes_factors <- function(
@@ -30,7 +33,8 @@ compute_wave2_bayes_factors <- function(
     "study_10_claim_02",
     "study_60_claim_01",
     "study_60_claim_02",
-    "study_47_claim_02"
+    "study_47_claim_02",
+    "study_35_claim_01"
   )
   
   ready_claims <- claims |>
@@ -59,6 +63,7 @@ compute_wave2_bayes_factors <- function(
         study_10 = compute_study_10_bayes_factors(claim = claim,priors = priors),
         study_60 = compute_study_60_bayes_factors(claim = claim,priors = priors),
         study_47 = compute_study_47_bayes_factors(claim = claim,priors = priors),
+        study_35 = compute_study_35_bayes_factors(claim = claim,priors = priors),
         stop(
           "No Wave 2 implementation for ",
           claim$claim_id,
