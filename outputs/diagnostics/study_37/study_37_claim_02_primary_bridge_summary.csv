@@ -1,0 +1,2 @@
+claim_id,prior_label,focal_sd,log_bf10,log10_bf10,bf10,bridge_sd_log10,bridge_span_log10,bridge_repetitions
+study_37_claim_02,primary,0.6,1.0678258095100261,0.46375085670407723,2.909047795253798,0.003597868435626332,0.009330916146547463,5
