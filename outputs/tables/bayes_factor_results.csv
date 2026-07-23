@@ -35,6 +35,9 @@ study_41_claim_01,study_41,paired_t_test,t_test,one_sample,two_sided,NA,positive
 study_41_claim_02,study_41,paired_t_test,t_test,one_sample,two_sided,NA,positive,NA,narrow,0.5,6.151246852292457,28,NA,NA,NA,29,1.219425388797962e-6,12442.575377229863,3.340947496058584e-11
 study_41_claim_02,study_41,paired_t_test,t_test,one_sample,two_sided,NA,positive,NA,primary,0.707,6.151246852292457,28,NA,NA,NA,29,1.219425388797962e-6,14725.20209602652,1.2334417534761286e-11
 study_41_claim_02,study_41,paired_t_test,t_test,one_sample,two_sided,NA,positive,NA,wide,1,6.151246852292457,28,NA,NA,NA,29,1.219425388797962e-6,15876.026067036477,5.262011402961018e-12
+study_47_claim_01,study_47,independent_t_test,t_test,independent,two_sided,NA,positive,NA,narrow,0.5,2.232189658058012,119,NA,63,58,121,0.02747386297158548,2.100609977426856,6.53951166649381e-5
+study_47_claim_01,study_47,independent_t_test,t_test,independent,two_sided,NA,positive,NA,primary,0.707,2.232189658058012,119,NA,63,58,121,0.02747386297158548,1.7962424316465486,1.0430921303726507e-4
+study_47_claim_01,study_47,independent_t_test,t_test,independent,two_sided,NA,positive,NA,wide,1,2.232189658058012,119,NA,63,58,121,0.02747386297158548,1.4402641964930054,1.4569155310416288e-4
 study_49_claim_01,study_49,paired_t_test,t_test,one_sample,one_sided,positive,positive,TRUE,narrow,0.5,1.2048289933537484,27,NA,NA,NA,28,0.11936204599031028,0.8505900194736716,8.05554537433144e-5
 study_49_claim_01,study_49,paired_t_test,t_test,one_sample,one_sided,positive,positive,TRUE,primary,0.707,1.2048289933537484,27,NA,NA,NA,28,0.11936204599031028,0.671997614246467,1.4970070135941776e-4
 study_49_claim_01,study_49,paired_t_test,t_test,one_sample,one_sided,positive,positive,TRUE,wide,1,1.2048289933537484,27,NA,NA,NA,28,0.11936204599031028,0.5094284901454541,7.317593125126013e-7

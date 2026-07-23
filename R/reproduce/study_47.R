@@ -89,6 +89,9 @@ reproduce_study_47 <- function(
   p_condition <- unname(between_table$`Pr(>F)`[condition_row])
   eta_condition <- (f_condition * df1_condition) / ((f_condition * df1_condition) + df2_condition)
 
+  t_condition <- sqrt(f_condition)
+  d_condition <- t_condition * sqrt(1 / n_condition_1 + 1 / n_condition_2)
+
   # --------------------------------------------------------------------------
   # Within-subject factor1 x Condition interaction.
   # SPSS reports the uncorrected/sphericity-assumed interaction:
@@ -158,19 +161,19 @@ reproduce_study_47 <- function(
     study_id = c("study_47", "study_47"),
     study_DOI = c("10.1177/00986283231226187", "10.1177/00986283231226187"),
     recomputation_status = c(status_condition, status_interaction),
-    stat_test = c("mixed_anova", "mixed_anova"),
+    stat_test = c("independent_t_test", "mixed_anova"),
     reported_result = c(
-      "F(1, 119) = 4.98, p = .027, eta_p2 = .040",
+      "Between-subjects Condition effect: F(1,119)=4.98 = t(119)^2; t(119)=2.23, p=.027 (equal-variance independent t on each subject's mean of the three prediction scores)",
       "F(2, 238) = 2.90, p = .057, eta_p2 = .024"
     ),
     p_value = c(p_condition, p_interaction),
     p_operator = c("=", "="),
-    p_sidedness = c("omnibus", "omnibus"),
-    t_value = c(NA_real_, NA_real_),
-    t_df = c(NA_real_, NA_real_),
-    f_value = c(f_condition, f_interaction),
-    f_df1 = c(df1_condition, df1_interaction),
-    f_df2 = c(df2_condition, df2_interaction),
+    p_sidedness = c("two_sided", "omnibus"),
+    t_value = c(t_condition, NA_real_),
+    t_df = c(df2_condition, NA_real_),
+    f_value = c(NA_real_, f_interaction),
+    f_df1 = c(NA_real_, df1_interaction),
+    f_df2 = c(NA_real_, df2_interaction),
     z_value = c(NA_real_, NA_real_),
     chi2_value = c(NA_real_, NA_real_),
     chi2_df = c(NA_real_, NA_real_),
@@ -179,8 +182,8 @@ reproduce_study_47 <- function(
     n2 = c(n_condition_2, n_condition_2),
     n_total = c(n_total, n_total),
     n_eff = c(NA_real_, NA_real_),
-    effect_size_type = c("eta_p2", "eta_p2"),
-    effect_size_value = c(eta_condition, eta_interaction),
+    effect_size_type = c("cohens_d_pooled", "eta_p2"),
+    effect_size_value = c(d_condition, eta_interaction),
     estimate = c(NA_real_, NA_real_),
     se_estimate = c(NA_real_, NA_real_),
     raw_data_file = c(input_path, input_path),
@@ -197,7 +200,12 @@ reproduce_study_47 <- function(
       "testing condition by predicted-performance format interaction across free recall, multiple-choice, and short-answer predictions"
     ),
     extraction_note = c(
-      paste0(note_common, " Row 35 extracts the between-subjects Condition effect from Tests of Between-Subjects Effects."),
+      paste0(note_common, " Row 35 is the between-subjects Condition effect (Tests of Between-Subjects Effects). ",
+             "WAVE 1: this effect is exactly an equal-variance independent-samples t-test of Condition on each ",
+             "subject's mean of the three prediction scores. F(1,119)=t(119)^2, df 119 = ", n_total, "-2, so ",
+             "t = sqrt(F) = ", signif(t_condition, 7), ", Cohen's d(pooled) = ", signif(d_condition, 7),
+             ", p = ", signif(p_condition, 6), " (two-sided, matching the non-directional published F). ",
+             "Stored as independent_t_test so the Wave-1 paired/independent-t Bayes-factor procedure applies."),
       paste0(note_common, " Row 36 extracts the factor1 x Condition effect from Tests of Within-Subjects Effects, sphericity assumed.")
     ),
     stringsAsFactors = FALSE
