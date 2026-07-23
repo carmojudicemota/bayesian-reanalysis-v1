@@ -8,7 +8,6 @@ load_wave2_data <- function(study_id, outcome_col = NULL) {
            tibble(outcome = as.numeric(dat$BCBSTotalScore),
                   A = factor(dat$Condition), B = factor(dat$Course)) |> na.omit()
          },
-         
          study_10 = {                                   
            dat <- readr::read_csv("data/raw/study_10/master.anonymizedOSF.csv", show_col_types = FALSE)
            d   <- dat[dat$university %in% c(1, 3), ]    
