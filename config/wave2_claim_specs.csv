@@ -1,16 +1,16 @@
 claim_id,wave2_family,handler,outcome_column,formula,model_null,model_alt,target_description,implementation_status
-study_06_claim_01,A,simple_effect_full_error,BCBSTotalScore,outcome ~ A * B,,,Condition simple effect within PSYC 111 using the full factorial-model residual error,pending_custom_model
-study_10_claim_01,A,factorial_model_pair,GHQc.total,outcome ~ A * B,B,A + B,Replicate main effect controlling for university,implemented_pending
-study_10_claim_02,A,factorial_model_pair,QHQb.total,outcome ~ A * B,B,A + B,Replicate main effect controlling for university,implemented_pending
-study_13_claim_01,C,welch_model_average,subj_total,,,,Subjective-knowledge mean difference averaged over the registered variance models,implemented_pending
-study_13_claim_02,C,welch_model_average,obj_total,,,,Objective-knowledge mean difference averaged over the registered variance models,implemented_pending
-study_29_claim_02,A,factorial_model_pair,univkids,outcome ~ A * B,B,A + B,Title main effect controlling for Department,implemented_ready
-study_35_claim_01,B,mixed_model_pair,score,score ~ Sex * condition + subject,Sex + Sex:condition + subject,Sex + condition + Sex:condition + subject,Sex-adjusted condition effect with participant random and the Sex-by-condition term retained,implemented_pending_model_label_check
-study_37_claim_01,D,glmm_normal_likelihood,,,,,Normal summary-likelihood Bayes factor for HUMAN_family1,implemented_pending
-study_37_claim_02,D,glmm_normal_likelihood,,,,,Normal summary-likelihood Bayes factor for synchronous11,implemented_pending
-study_43_claim_01,B,adjusted_contrast_model,reviewed,contrast ~ Lecture + questiontype_crit,,,Adjusted testing-minus-restudy contrast for reviewed content,pending_custom_model
-study_43_claim_02,B,adjusted_contrast_model,questiontype,contrast ~ Lecture + questiontype_crit,,,Adjusted reviewed-minus-unreviewed contrast,pending_custom_model
-study_47_claim_02,B,mixed_model_pair,score,score ~ Condition * condition + subject,Condition + condition + subject,Condition + condition + Condition:condition + subject,Condition-by-response-format interaction with participant random,implemented_pending
-study_55_claim_01,E,welch_anova_candidate,,,,,Four-group heteroscedastic omnibus mean comparison,candidate_open
-study_60_claim_01,A,factorial_model_pair,fieldbelong_exact_winsorized,outcome ~ A * B,B,A + B,Syllabus-safety-cue main effect controlling for professor gender,implemented_pending
-study_60_claim_02,A,factorial_model_pair,include_1,outcome ~ A * B,B,A + B,Syllabus-safety-cue main effect controlling for professor gender,implemented_pending
+study_06_claim_01,A,simple_effect_full_error,BCBSTotalScore,outcome ~ A * B,,,Condition simple effect within PSYC 111 using the full factorial residual error,pending_custom_model
+study_10_claim_01,A,factorial_model_pair,GHQc.total,outcome ~ A * B,outcome ~ B + A:B,outcome ~ A + B + A:B,Replicate main effect with university and replicate by university interaction retained,implemented_pending
+study_10_claim_02,A,factorial_model_pair,QHQb.total,outcome ~ A * B,outcome ~ B + A:B,outcome ~ A + B + A:B,Replicate main effect with university and replicate by university interaction retained,implemented_pending
+study_13_claim_01,C,welch_model_average,subj_total,,,,Subjective knowledge effect averaged over effect variance and likelihood models,implemented_pending
+study_13_claim_02,C,welch_model_average,obj_total,,,,Objective knowledge effect averaged over effect variance and likelihood models,implemented_pending
+study_29_claim_02,A,factorial_model_pair,univkids,outcome ~ A * B,outcome ~ B + A:B,outcome ~ A + B + A:B,Title main effect with Department and Title by Department interaction retained,implemented_ready
+study_35_claim_01,B,mixed_model_pair,score,score ~ Sex * condition + subject,score ~ Sex + Sex:condition + subject,score ~ Sex + condition + Sex:condition + subject,Sex adjusted condition effect with interaction and participant retained,implemented_pending
+study_37_claim_01,D,glmm_normal_likelihood,,,,,Normal summary likelihood Bayes factor for HUMAN_family1,implemented_pending
+study_37_claim_02,D,glmm_normal_likelihood,,,,,Normal summary likelihood Bayes factor for synchronous11,implemented_pending
+study_43_claim_01,B,adjusted_contrast_model,reviewed,contrast ~ Lecture + questiontype_crit,,,Adjusted testing minus restudy contrast for reviewed content,pending_custom_model
+study_43_claim_02,B,adjusted_contrast_model,questiontype,contrast ~ Lecture + questiontype_crit,,,Adjusted reviewed minus unreviewed contrast,pending_custom_model
+study_47_claim_02,B,mixed_model_pair,score,score ~ Condition * condition + subject,score ~ Condition + condition + subject,score ~ Condition + condition + Condition:condition + subject,Condition by response format interaction with participant retained,implemented_pending
+study_55_claim_01,E,welch_anova_candidate,,,,,Four group heteroscedastic omnibus mean comparison,candidate_open
+study_60_claim_01,A,factorial_model_pair,fieldbelong_exact_winsorized,outcome ~ A * B,outcome ~ B + A:B,outcome ~ A + B + A:B,Syllabus safety cue effect with professor gender and interaction retained,implemented_pending
+study_60_claim_02,A,factorial_model_pair,include_1,outcome ~ A * B,outcome ~ B + A:B,outcome ~ A + B + A:B,Syllabus safety cue effect with professor gender and interaction retained,implemented_pending
