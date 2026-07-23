@@ -88,60 +88,7 @@ load_study_47_wave2_data <- function(
 
 
 compute_study_47_bayes_factors <- function(claim,priors) {
-  
   data <- load_study_47_wave2_data()
-  fixed_priors <- priors |>
-    dplyr::filter(
-      .data$prior_family ==
-        "anova_cauchy",
-      .data$param ==
-        "rscale_fixed"
-    ) |>
-    dplyr::mutate(
-      prior_order = match(
-        .data$prior_label,
-        c(
-          "narrow",
-          "primary",
-          "wide"
-        )
-      )
-    ) |>
-    dplyr::arrange(
-      .data$prior_order
-    )
-  
-  if (
-    nrow(fixed_priors) != 3L ||
-    anyNA(fixed_priors$prior_order)
-  ) {
-    stop(
-      "Study 47 requires narrow, primary and wide ",
-      "fixed-effect ANOVA priors.",
-      call. = FALSE
-    )
-  }
-  
-  random_scale <- priors |>
-    dplyr::filter(
-      .data$prior_family ==
-        "anova_cauchy",
-      .data$param ==
-        "rscale_random",
-      .data$prior_label ==
-        "primary"
-    ) |>
-    dplyr::pull(
-      .data$value
-    )
-  
-  if (length(random_scale) != 1L) {
-    stop(
-      "Study 47 requires exactly one primary ",
-      "rscale_random prior.",
-      call. = FALSE
-    )
-  }
   
   model_null <-
     score ~
@@ -156,44 +103,11 @@ compute_study_47_bayes_factors <- function(claim,priors) {
     Condition:format +
     participant
   
-  purrr::map_dfr(
-    seq_len(nrow(fixed_priors)),
-    function(i) {
-      prior_label <- fixed_priors$prior_label[i]
-      fixed_scale <- as.numeric(fixed_priors$value[i])
-      null_bf <- BayesFactor::lmBF(formula = model_null,
-                                   data = data,
-                                   whichRandom = "participant",
-                                   rscaleFixed = fixed_scale,
-                                   rscaleRandom = random_scale,
-                                   progress = FALSE
-                                   )
-      
-      alternative_bf <- BayesFactor::lmBF(formula = model_alt,
-                                          data = data,
-                                          whichRandom = "participant",
-                                          rscaleFixed = fixed_scale,
-                                          rscaleRandom = random_scale,
-                                          progress = FALSE
-                                          )
-      
-      comparison <- alternative_bf / null_bf
-      extracted <- BayesFactor::extractBF(comparison)
-      wave2_row(
-        claim = claim,
-        prior_label = prior_label,
-        rscale = fixed_scale,
-        bf10 = extracted$bf[1],
-        bf_error = extracted$error[1],
-        model_null = paste(
-          deparse(model_null),
-          collapse = ""
-        ),
-        model_alt = paste(
-          deparse(model_alt),
-          collapse = ""
-        )
-      )
-    }
-  )
+  compute_mixed_anova_model_pair(claim = claim,
+                                 data = data,
+                                 model_null = model_null,
+                                 model_alt = model_alt,
+                                 priors = priors,
+                                 participant_column = "participant"
+                                 )
 }
