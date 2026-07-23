@@ -1,3 +1,2 @@
-# Bayesian Reanalysis of Computationally Reproduced Psychology Results
-
+# Bayesian Reanalysis v1
 

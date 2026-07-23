@@ -1,0 +1,2 @@
+claim_id,outcome_column,model_null,model_alt
+study_29_claim_02,univkids,B,A + B
