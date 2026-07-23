@@ -17,13 +17,6 @@ validate_one <- function(path) {
   dat$has_test_statistic <- !is.na(dat$t_value) | !is.na(dat$f_value) | !is.na(dat$z_value) | !is.na(dat$chi2_value) | !is.na(dat$r_value)
   dat$has_sample_information <- !is.na(dat$n_total) | (!is.na(dat$n1) & !is.na(dat$n2)) | !is.na(dat$n_eff)
 
-  # Directionality invariant, checked at source.
-  # Policy: sidedness follows the original published test. A reproduction must
-  # store the p-value that matches the p it reports as published, and label it
-  # correctly -- because compute_wave1_bayes_factors() computes a one-sided
-  # (order-restricted) Bayes factor exactly when p_sidedness == "one_sided".
-  # A row labelled one_sided while holding the two-sided p (or vice versa) would
-  # silently pair a one-sided BF with a two-sided p and corrupt the concordance.
   checkable <- !is.na(dat$t_value) & !is.na(dat$t_df) & !is.na(dat$p_value) &
     !is.na(dat$p_sidedness) & dat$p_sidedness %in% c("one_sided", "two_sided")
   p_two <- 2 * stats::pt(-abs(dat$t_value), dat$t_df)
