@@ -81,21 +81,30 @@ load_wave2_data <- function(study_id, outcome_col = NULL) {
          #FAMILY C
          
          study_13 = {
-           dat <- haven::read_sav("data/raw/study_13/DATA_Cleaned_and_coded_for_condition.sav")
-           cond <- as.numeric(dat$condition)
-           if (is.null(outcome_col) || !nzchar(outcome_col)) {
-             stop("study_13 requires outcome_col", call. = FALSE)
+           dat <- haven::read_sav(
+             "data/raw/study_13/DATA_Cleaned_and_coded_for_condition.sav"
+           )
+           if (
+             is.null(outcome_col) ||
+             !outcome_col %in% names(dat)
+           ) {
+             stop(
+               "A valid outcome_col is required for study_13. ",
+               "Use 'subj_total' or 'obj_total'.",
+               call. = FALSE
+             )
            }
-           if (!outcome_col %in% names(dat)) {
-             stop("study_13 outcome column not found: ", outcome_col, call. = FALSE)
-           }
-           y <- as.numeric(dat[[outcome_col]])
-           keep <- stats::complete.cases(y, cond) & cond %in% c(0, 1)
+           outcome <- as.numeric(dat[[outcome_col]])
+           condition <- as.numeric(dat$condition)
+           keep <- complete.cases(outcome, condition)
+           outcome <- outcome[keep]
+           condition <- condition[keep]
            list(
-             x1 = y[keep & cond == 1],
-             x2 = y[keep & cond == 0]
+             x1 = outcome[condition == 1],
+             x2 = outcome[condition == 0]
            )
          },
          
+         #ELSE
          stop("No Wave 2 data loader for ", study_id, call. = FALSE))
 }

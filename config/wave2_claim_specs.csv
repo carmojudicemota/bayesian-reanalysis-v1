@@ -1,16 +1,16 @@
-claim_id,outcome_column,handler,model_null,model_alt,target_description,activation_state
-study_29_claim_02,univkids,factorial_additive,B,A + B,Title effect in additive model controlling for Department,active
-study_10_claim_01,GHQc.total,factorial_additive,B,A + B,Replicate main effect in additive model controlling for university,planned
-study_10_claim_02,QHQb.total,factorial_additive,B,A + B,Replicate main effect in additive model controlling for university,planned
-study_13_claim_01,subj_total,welch_model_averaged,delta = 0,delta != 0,Subjective-knowledge mean difference with variance model averaging,planned
-study_13_claim_02,obj_total,welch_model_averaged,delta = 0,delta != 0,Objective-knowledge mean difference with variance model averaging,planned
-study_60_claim_01,fieldbelong_exact_winsorized,factorial_additive,B,A + B,Safety-cue main effect in additive model controlling for professor gender,planned
-study_60_claim_02,include_1,factorial_additive,B,A + B,Safety-cue main effect in additive model controlling for professor gender,planned
-study_06_claim_01,BCBSTotalScore,simple_effect_full_error,,,Condition simple effect within PSYC 111 using full-model residual error,blocked
-study_35_claim_01,,mixed_type3_condition,,,Sex-adjusted Type III condition effect,blocked
-study_43_claim_01,reviewed,custom_reviewed_contrast,,,Reviewed-content testing contrast adjusted for Lecture and question type,blocked
-study_43_claim_02,questiontype,custom_questiontype_contrast,,,Question-type contrast adjusted for Lecture and question type,blocked
-study_47_claim_02,,mixed_interaction,,,Condition by prediction-format interaction,blocked
-study_37_claim_01,,glmm_summary_diagnostic,beta = 0,beta != 0,Normal summary-likelihood diagnostic only,diagnostic
-study_37_claim_02,,glmm_summary_diagnostic,beta = 0,beta != 0,Normal summary-likelihood diagnostic only,diagnostic
-study_55_claim_01,,welch_anova_heteroscedastic,,,Four-group heteroscedastic omnibus comparison,blocked
+claim_id,wave2_family,handler,outcome_column,formula,model_null,model_alt,target_description,implementation_status
+study_06_claim_01,A,simple_effect_full_error,BCBSTotalScore,outcome ~ A * B,,,Condition simple effect within PSYC 111 using the full factorial-model residual error,pending_custom_model
+study_10_claim_01,A,factorial_model_pair,GHQc.total,outcome ~ A * B,B,A + B,Replicate main effect controlling for university,implemented_pending
+study_10_claim_02,A,factorial_model_pair,QHQb.total,outcome ~ A * B,B,A + B,Replicate main effect controlling for university,implemented_pending
+study_13_claim_01,C,welch_model_average,subj_total,,,,Subjective-knowledge mean difference averaged over the registered variance models,implemented_pending
+study_13_claim_02,C,welch_model_average,obj_total,,,,Objective-knowledge mean difference averaged over the registered variance models,implemented_pending
+study_29_claim_02,A,factorial_model_pair,univkids,outcome ~ A * B,B,A + B,Title main effect controlling for Department,implemented_ready
+study_35_claim_01,B,mixed_model_pair,score,score ~ Sex * condition + subject,Sex + Sex:condition + subject,Sex + condition + Sex:condition + subject,Sex-adjusted condition effect with participant random and the Sex-by-condition term retained,implemented_pending_model_label_check
+study_37_claim_01,D,glmm_normal_likelihood,,,,,Normal summary-likelihood Bayes factor for HUMAN_family1,implemented_pending
+study_37_claim_02,D,glmm_normal_likelihood,,,,,Normal summary-likelihood Bayes factor for synchronous11,implemented_pending
+study_43_claim_01,B,adjusted_contrast_model,reviewed,contrast ~ Lecture + questiontype_crit,,,Adjusted testing-minus-restudy contrast for reviewed content,pending_custom_model
+study_43_claim_02,B,adjusted_contrast_model,questiontype,contrast ~ Lecture + questiontype_crit,,,Adjusted reviewed-minus-unreviewed contrast,pending_custom_model
+study_47_claim_02,B,mixed_model_pair,score,score ~ Condition * condition + subject,Condition + condition + subject,Condition + condition + Condition:condition + subject,Condition-by-response-format interaction with participant random,implemented_pending
+study_55_claim_01,E,welch_anova_candidate,,,,,Four-group heteroscedastic omnibus mean comparison,candidate_open
+study_60_claim_01,A,factorial_model_pair,fieldbelong_exact_winsorized,outcome ~ A * B,B,A + B,Syllabus-safety-cue main effect controlling for professor gender,implemented_pending
+study_60_claim_02,A,factorial_model_pair,include_1,outcome ~ A * B,B,A + B,Syllabus-safety-cue main effect controlling for professor gender,implemented_pending
